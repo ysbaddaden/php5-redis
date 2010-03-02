@@ -1,0 +1,20 @@
+= php5-Redis
+
+I'm currently learning how to write PHP extensions in C or C++. I wanted
+to build something interesting, and thus decided to write class for
+Redis[http://code.google.com/p/redis].
+
+== Pure PHP class
+
+A pure PHP implementation is available. I wrote it to understand the protocol,
+and have a pure PHP test file, which will be used to test the PHP extension.
+
+== PHP extension
+
+Only the generic code for PHP extensions has been written. Everything needs
+to be done.
+
+== author
+
+- Julien Portalier <ysbaddaden@gmail.com>
+

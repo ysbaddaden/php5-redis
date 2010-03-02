@@ -58,23 +58,23 @@
 # 
 class Redis
 {
-  const ERR_CONNECT       = 1;
-  const ERR_NOT_CONNECTED = 2;
-  const ERR_AUTH          = 3;
-  const ERR_REPLY         = 4;
-  const ERR_ARG_COUNT     = 5;
+  const ERR_CONNECT   = 1;
+  const ERR_SOCKET    = 2;
+  const ERR_AUTH      = 3;
+  const ERR_ARG_COUNT = 4;
+  const ERR_REPLY     = 5;
   
   const CMD_INLINE    = 1;
   const CMD_BULK      = 2;
   const CMD_MULTIBULK = 3;
   
-  const REP_OK     = 1;
-  const REP_STRING = 2;
-  const REP_INT    = 3;
-  const REP_FLOAT  = 4;
-  const REP_BOOL   = 5;
-  const REP_QUEUED = 6;
-  const REP_PONG   = 7;
+  const REP_OK        = 1;
+  const REP_STRING    = 2;
+  const REP_INT       = 3;
+  const REP_FLOAT     = 4;
+  const REP_BOOL      = 5;
+  const REP_QUEUED    = 6;
+  const REP_PONG      = 7;
   
   public  $debug = false;
   private $sock;
@@ -173,9 +173,6 @@ class Redis
     'slaveof'      => array(0,  self::CMD_INLINE,    self::REP_OK),
   );
   
-  function __construct() {
-  }
-  
   function __destruct() {
     $this->quit();
   }
@@ -183,8 +180,9 @@ class Redis
   function __call($name, $args)
   {
     $cmd = $this->lookup_command($name);
-    $this->send_command($this->format_command($cmd, $args));
-    return $this->read_command_reply($cmd);
+    $str = $this->format_command($cmd, $args);
+    $this->send_command($str);
+    return $this->read_reply($cmd);
   }
   
   function connect($host='localhost', $port=6379, $password=null)
@@ -206,52 +204,29 @@ class Redis
   {
     if ($this->sock)
     {
-      $this->send_command($this->format_inline_command('quit'));
+      $this->send_raw_command('quit');
       $this->sock = null;
     }
-  }
-  
-  function mset($keys) {
-    return $this->_mset('mset', $keys);
-  }
-  
-  function msetnx($keys) {
-    return $this->_mset('msetnx', $keys);
   }
   
   function pipe($closure)
   {
     $pipe = new RedisPipeline($this);
     $closure($pipe);
-    return $pipe->send();
+    return $pipe->execute();
   }
   
-  
-  private function _mset($name, $keys)
+  # :nodoc:
+  function lookup_command($name)
   {
-    $args = array($name);
-    foreach($keys as $k => $v)
-    {
-      $args[] = $k;
-      $args[] = $v;
-    }
-    $cmd = $this->format_multibulk_command($args);
-    $this->send_command($cmd);
-    $rs = $this->read_reply();
-    return ($name == 'mset') ? ($rs == 'OK') : (bool)$rs;
-  }
-  
-  private function lookup_command($name)
-  {
-    if (!isset(self::$commands[$name])) {
-      return null;
-    }
+    $cmd = isset(static::$commands[$name]) ?
+      static::$commands[$name] : array(-1, self::CMD_MULTIBULK);
+    
     return array(
-      'name'       => $name,
-      'arity'      => self::$commands[$name][0],
-      'cmd_type'   => self::$commands[$name][1],
-      'reply_type' => isset(self::$commands[$name][2]) ?
-        self::$commands[$name][2] : null,
+      'name'  => $name,
+      'arity' => $cmd[0],
+      'type'  => $cmd[1],
+      'reply' => isset($cmd[2]) ? $cmd[2] : null,
     );
   }
   
@@ -260,10 +235,6 @@ class Redis
   {
     if (isset($args[0]) and is_array($args[0])) {
       $args = $args[0];
-    }
-    
-    if ($cmd === null) {
-      return $this->format_multibulk_command($cmd, $args);
     }
     
     if (( $cmd['arity'] > 0
@@ -279,29 +250,29 @@ class Redis
         $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
     }
     
-    switch($cmd['cmd_type'])
+    switch($cmd['type'])
     {
-      case self::CMD_INLINE:    return $this->format_inline_command($cmd['name'], $args);
-      case self::CMD_BULK:      return $this->format_bulk_command($cmd['name'], $args);
-      case self::CMD_MULTIBULK: return $this->format_multibulk_command($args, $cmd['name']);
+      case self::CMD_INLINE:
+        return $this->format_inline_command($cmd['name'], $args);
+      
+      case self::CMD_BULK:
+        return $this->format_bulk_command($cmd['name'], $args);
+      
+      case self::CMD_MULTIBULK:
+        return $this->format_multibulk_command($cmd['name'], $args);
     }
   }
   
-  protected function format_inline_command($name, $args=array())
+  private function format_inline_command($name, $args=array())
   {
     $cmd = $name;
-    if (!empty($args))
-    {
-      foreach($args as $arg)
-      {
-        $cmd .= ' ';
-        $cmd .= is_array($arg) ? implode(' ', $arg) : $arg;
-      }
+    foreach($args as $arg) {
+      $cmd .= ' '.(is_array($arg) ? implode(' ', $arg) : $arg);
     }
     return $cmd;
   }
   
-  protected function format_bulk_command($name, $args=array())
+  private function format_bulk_command($name, $args=array())
   {
     $bulk_data = array_pop($args);
     $cmd  = "$name ".implode(' ', $args).' ';
@@ -310,11 +281,23 @@ class Redis
     return $cmd;
   }
   
-  protected function format_multibulk_command($args=array(), $name=null)
+  private function format_multibulk_command($name, $args=array())
   {
+    if ($name == 'mset'
+      or $name == "msetnx")
+    {
+      $_args = array();
+      foreach($args as $k => $v)
+      {
+        $_args[] = $k;
+        $_args[] = $v;
+      }
+      $args = $_args;
+    }
     if ($name !== null) {
       array_unshift($args, $name);
     }
+    
     $cmd = '*'.count($args);
     foreach($args as $arg) {
       $cmd .= "\r\n$".strlen($arg)."\r\n".$arg;
@@ -322,26 +305,31 @@ class Redis
     return $cmd;
   }
   
-  # :private:
-  function send_command($cmd, $read_reply=true)
+  # :nodoc:
+  function send_command($cmd)
   {
-    if ($this->debug) echo "\n-> \"$cmd\"\n";
-    
-    if (fwrite($this->sock, "$cmd\r\n") !== false) {
-      #return $read_reply ? $this->read_reply() : true;
-      return true;
+    if (!is_array($cmd)) {
+      $cmd = array($cmd);
     }
-    
-    throw new RedisException("Error writing to server socket. Are you connected?",
-      Redis::ERR_NOT_CONNECTED);
+    $cmd = implode("\r\n", $cmd);
+    $this->send_raw_command($cmd);
   }
   
-  # :private:
-  function read_command_reply($cmd)
+  private function send_raw_command($cmd)
   {
-    $rs = $this->read_reply();
+    if ($this->debug) echo "\n> \"$cmd\"\n";
     
-    switch($cmd['reply_type'])
+    if (!fwrite($this->sock, "$cmd\r\n")) {
+      throw new RedisException("Cannot write to server socket.", Redis::ERR_SOCKET);
+    }
+  }
+  
+  # :nodoc:
+  function read_reply($cmd)
+  {
+    $rs = $this->read_raw_reply();
+    
+    switch($cmd['reply'])
     {
       case null:             return $rs;
       case self::REP_INT:    return (int)$rs;
@@ -352,8 +340,7 @@ class Redis
     }
   }
   
-  # :private:
-  function read_reply()
+  private function read_raw_reply()
   {
     switch(fgetc($this->sock))
     {
@@ -361,22 +348,25 @@ class Redis
       case ':': return (int)$this->read_single_line_reply();
       case '$': return $this->read_bulk_reply();
       case '*': return $this->read_multibulk_reply();
-      case '-': throw new RedisException($this->read_single_line_reply(),
-        self::ERR_REPLY);
+      case '-': throw new RedisException($this->read_single_line_reply(), self::ERR_REPLY);
     }
   }
   
   private function read_single_line_reply()
   {
     $line = rtrim(fgets($this->sock), "\r\n");
-    if ($this->debug) echo "<- \"$line\"\n";
+    if ($this->debug) echo "< \"$line\"\n";
     return $line;
   }
   
   private function read_bulk_reply()
   {
     $len = (int)fgets($this->sock);
-    if ($len == -1) return null;
+    if ($len == -1)
+    {
+      if ($this->debug) echo "< NULL\n";
+      return null;
+    }
     
     # gets the bulk response (and discards the last CRLF)
     $rs  = '';
@@ -385,7 +375,7 @@ class Redis
     }
     fread($this->sock, 2);
     
-    if ($this->debug) echo "<- \"$rs\"\n";
+    if ($this->debug) echo "< \"$rs\"\n";
     return $rs;
   }
   
@@ -404,43 +394,40 @@ class Redis
   }
 }
 
-class RedisException extends Exception
-{
-}
+class RedisException extends Exception { }
 
-/*
-# :nodoc:
 class RedisPipeline
 {
+  private $redis;
   private $commands = array();
   
   function __construct($redis) {
     $this->redis = $redis;
   }
   
-  function __call($func, $args) {
-    $this->commands[$func] = $args;
+  function __call($func, $args)
+  {
+    $cmd = $this->redis->lookup_command($func);
+    $this->commands[] = array($cmd, $args);
   }
   
-  function & send()
+  function execute()
   {
-    # sends the list of commands
-    $cmd = '';
-    foreach($this->commands as $func => $args)
-    {
-      $cmd .= $this->redis->format_command($func, $args);
-      $cmd .= "\r\n";
+    if (empty($this->commands)) {
+      return null;
     }
-    $redis->send_command($cmd);
     
-    # reads the list of replies
+    $commands = array();
+    foreach($this->commands as $cmd) {
+      $commands[] = $this->redis->format_command($cmd[0], $cmd[1]);
+    }
+    $this->redis->send_command($commands);
+    
     $rs = array();
-    for ($i=0; $i<count($this->commands); $i++) {
-      $rs[] = $this->redis->read_reply();
+    foreach($this->commands as $cmd) {
+      $rs[] = $this->redis->read_reply($cmd[0]);
     }
     return $rs;
   }
 }
-*/
-
 ?>

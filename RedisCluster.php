@@ -19,7 +19,7 @@
 # (whatever is before +:+), so that all +webcomic:*+ keys will be on the same
 # servers, while +chapters:*+ could be on another one:
 # 
-#   $redis = new RedisCluster($configs, function($key)
+#   $redis = new RedisCluster(array($server1, $server2), function($key)
 #   {
 #     $hkey = explode(':', $key, 2);
 #     return md5($hkey[0]);
@@ -30,11 +30,8 @@ class RedisCluster
   private $redis;
   private $hash_method;
   
-  function __construct($configs, $hash_method='md5')
+  function __construct($configs=array(), $hash_method='md5')
   {
-    if (count($configs) == 0) {
-      trigger_error("You must configure at least one redis server.", E_USER_ERROR);
-    }
     $this->servers     = new RedisServers($configs);
     $this->hash_method = $hash_method;
   }
@@ -47,7 +44,7 @@ class RedisCluster
   
   # Sends a command to a specific server.
   function send_command($server, $command, $args) {
-    return $this->servers[$server]->$func($args);
+    return call_user_func_array(array($this->servers[$server], $command), $args);
   }
   
   private function hash($func, $args)
@@ -55,7 +52,7 @@ class RedisCluster
     if (count($this->servers) > 1)
     {
       $cmd  = Redis::lookup_command($func, $args);
-      $hash = call_user_func_array($this->hash_method, $args[$cmd['key']]);
+      $hash = call_user_func_array($this->hash_method, $args[0]);
       return $hash % count($this->servers);
     }
     return 0;

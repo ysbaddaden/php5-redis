@@ -200,17 +200,20 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_pipe()
   {
-    $this->assert_null($this->redis->pipe(function() {}));
-    $this->assert_equal($this->redis->pipe(function($pipe)
+    if ($this->redis instanceof Redis)
     {
-      $pipe->mset(array('key1' => 1, 'key2' => 4));
-      $pipe->set('key3', 45);
-      $pipe->incr('key1');
-      $pipe->decr('key2');
-      $pipe->incr('key3');
-      $pipe->incr('key4');
-      $pipe->decr('key5');
-    }), array(true, true, 2, 3, 46, 1, -1));
+      $this->assert_null($this->redis->pipe(function() {}));
+      $this->assert_equal($this->redis->pipe(function($pipe)
+      {
+        $pipe->mset(array('key1' => 1, 'key2' => 4));
+        $pipe->set('key3', 45);
+        $pipe->incr('key1');
+        $pipe->decr('key2');
+        $pipe->incr('key3');
+        $pipe->incr('key4');
+        $pipe->decr('key5');
+      }), array(true, true, 2, 3, 46, 1, -1));
+    }
   }
   
   function test_server_commands()
@@ -222,6 +225,15 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_not_equal($this->redis->dbsize(), 0);
     $this->assert_true($this->redis->flushdb());
     $this->assert_equal($this->redis->dbsize(), 0);
+  }
+}
+
+class TestRedisCluster extends TestRedis
+{
+  function setup()
+  {
+    $this->redis = new RedisCluster(array(array('db' => 0xF)));
+    $this->redis->debug = in_array('-d', $_SERVER['argv']);
   }
 }
 

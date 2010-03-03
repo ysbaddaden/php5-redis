@@ -10,7 +10,7 @@ class RedisServers implements Countable, ArrayAccess
   function __construct($configs)
   {
     $this->configs = $configs;
-    $this->count   = count($configs);
+    $this->count   = empty($configs) ? 1 : count($configs);
   }
   
   function count() {
@@ -31,7 +31,7 @@ class RedisServers implements Countable, ArrayAccess
     {
       if (!isset($this->configs[$index]))
       {
-        trigger_error("No configuration for server $index, using localhost:6379.", E_USER_WARNING);
+        trigger_error("No configuration for server $index, using localhost:6379.", E_USER_NOTICE);
         $config = array('host' => 'localhost', 'port' => 6379);
       }
       else {

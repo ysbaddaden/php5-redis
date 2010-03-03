@@ -173,6 +173,15 @@ class Redis
     'slaveof'      => array(0,  self::CMD_INLINE,    self::REP_OK),
   );
   
+  function __construct($config=null)
+  {
+    $this->config = $config;
+    #$host      = isset($config['host'])     ? $config['host']     : 'localhost';
+    #$port      = isset($config['port'])     ? $config['port']     : '6379';
+    #$password  = isset($config['password']) ? $config['password'] : null;
+    #$this->connect($host, $port, $password);
+  }
+  
   function __destruct() {
     $this->quit();
   }
@@ -185,14 +194,17 @@ class Redis
     return $this->read_reply($cmd);
   }
   
-  function connect($host='localhost', $port=6379, $password=null)
+  function connect(/*$host='localhost', $port=6379, $password=null*/)
   {
+    $host      = isset($this->config['host'])     ? $this->config['host']     : 'localhost';
+    $port      = isset($this->config['port'])     ? $this->config['port']     : '6379';
+    
     if (($this->sock = fsockopen($host, $port, $errno, $errstr)) === false)
     {
       throw new RedisException("Unable to connect to Redis server on $host:$port ".
         "($errno $errstr).", Redis::ERR_CONNECT);
     }
-    if ($password !== null
+    if (isset($this->config['password'])
       and !$this->auth($password))
     {
       throw new RedisException("Unable to auth on Redis server: wrong password?",
@@ -217,7 +229,7 @@ class Redis
   }
   
   # :nodoc:
-  function lookup_command($name)
+  static function lookup_command($name)
   {
     $cmd = isset(static::$commands[$name]) ?
       static::$commands[$name] : array(-1, self::CMD_MULTIBULK);
@@ -319,6 +331,10 @@ class Redis
   {
     if ($this->debug) echo "\n> \"$cmd\"\n";
     
+    if ($this->sock === null) {
+      $this->connect();
+    }
+    
     if (!fwrite($this->sock, "$cmd\r\n")) {
       throw new RedisException("Cannot write to server socket.", Redis::ERR_SOCKET);
     }
@@ -394,40 +410,4 @@ class Redis
   }
 }
 
-class RedisException extends Exception { }
-
-class RedisPipeline
-{
-  private $redis;
-  private $commands = array();
-  
-  function __construct($redis) {
-    $this->redis = $redis;
-  }
-  
-  function __call($func, $args)
-  {
-    $cmd = $this->redis->lookup_command($func);
-    $this->commands[] = array($cmd, $args);
-  }
-  
-  function execute()
-  {
-    if (empty($this->commands)) {
-      return null;
-    }
-    
-    $commands = array();
-    foreach($this->commands as $cmd) {
-      $commands[] = $this->redis->format_command($cmd[0], $cmd[1]);
-    }
-    $this->redis->send_command($commands);
-    
-    $rs = array();
-    foreach($this->commands as $cmd) {
-      $rs[] = $this->redis->read_reply($cmd[0]);
-    }
-    return $rs;
-  }
-}
 ?>

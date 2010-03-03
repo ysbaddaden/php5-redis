@@ -9,7 +9,6 @@ class TestRedis extends Test\Unit\TestCase
   {
     $this->redis = new Redis();
     $this->redis->debug = in_array('-d', $_SERVER['argv']);
-    $this->redis->connect();
     $this->redis->select(0xF);
   }
   
@@ -21,15 +20,9 @@ class TestRedis extends Test\Unit\TestCase
   {
     $this->assert_throws('RedisException', function()
     {
-      $r = new Redis();
-      @$r->connect('localhost', '1234567890');
+      $r = new Redis(array('host' => 'localhost', 'port' => '1234567890'));
+      @$r->connect();
     }, 'Redis::ERR_CONNECT');
-    
-    $this->assert_throws('RedisException', function()
-    {
-      $r = new Redis();
-      @$r->set('a', 'b');
-    }, 'Redis::ERR_SOCKET');
   }
   
   function test_bad_commands()

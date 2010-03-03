@@ -7,9 +7,8 @@ class TestRedis extends Test\Unit\TestCase
   
   function setup()
   {
-    $this->redis = new Redis();
+    $this->redis = new Redis(array('db' => 0xF));
     $this->redis->debug = in_array('-d', $_SERVER['argv']);
-    $this->redis->select(0xF);
   }
   
   function teardown() {

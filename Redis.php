@@ -23,7 +23,7 @@
 #   
 #   $r->del('counter');          # => true
 #   $r->get('counter');          # => null
-#   
+# 
 # = Replies
 # 
 # == Errors
@@ -173,13 +173,8 @@ class Redis
     'slaveof'      => array(0,  self::CMD_INLINE,    self::REP_OK),
   );
   
-  function __construct($config=null)
-  {
+  function __construct($config=null) {
     $this->config = $config;
-    #$host      = isset($config['host'])     ? $config['host']     : 'localhost';
-    #$port      = isset($config['port'])     ? $config['port']     : '6379';
-    #$password  = isset($config['password']) ? $config['password'] : null;
-    #$this->connect($host, $port, $password);
   }
   
   function __destruct() {
@@ -194,21 +189,26 @@ class Redis
     return $this->read_reply($cmd);
   }
   
-  function connect(/*$host='localhost', $port=6379, $password=null*/)
+  function connect()
   {
-    $host      = isset($this->config['host'])     ? $this->config['host']     : 'localhost';
-    $port      = isset($this->config['port'])     ? $this->config['port']     : '6379';
+    $host = isset($this->config['host'])     ? $this->config['host']     : 'localhost';
+    $port = isset($this->config['port'])     ? $this->config['port']     : '6379';
     
     if (($this->sock = fsockopen($host, $port, $errno, $errstr)) === false)
     {
       throw new RedisException("Unable to connect to Redis server on $host:$port ".
         "($errno $errstr).", Redis::ERR_CONNECT);
     }
+    
     if (isset($this->config['password'])
       and !$this->auth($password))
     {
       throw new RedisException("Unable to auth on Redis server: wrong password?",
         Redis::ERR_AUTH);
+    }
+    
+    if (isset($this->config['db'])) {
+      $this->select($this->config['db']);
     }
   }
   
@@ -229,7 +229,7 @@ class Redis
   }
   
   # :nodoc:
-  static function lookup_command($name)
+  function lookup_command($name)
   {
     $cmd = isset(static::$commands[$name]) ?
       static::$commands[$name] : array(-1, self::CMD_MULTIBULK);

@@ -181,12 +181,8 @@ class Redis
     $this->quit();
   }
   
-  function __call($name, $args)
-  {
-    $cmd = $this->lookup_command($name);
-    $str = $this->format_command($cmd, $args);
-    $this->send_command($str);
-    return $this->read_reply($cmd);
+  function __call($name, $args) {
+    return $this->send_command(array(array($name, $args)));
   }
   
   function connect()
@@ -317,14 +313,28 @@ class Redis
     return $cmd;
   }
   
-  # :nodoc:
-  function send_command($cmd)
+  function send_command($commands)
   {
-    if (!is_array($cmd)) {
-      $cmd = array($cmd);
+    # format
+    $cmd_str = array();
+    $cmd     = array();
+    foreach($commands as $i => $c)
+    {
+      list($name, $args) = $c;
+      $cmd[$i]   = $this->lookup_command($name);
+      $cmd_str[] = $this->format_command($cmd[$i], $args);
     }
-    $cmd = implode("\r\n", $cmd);
-    $this->send_raw_command($cmd);
+    
+    # call
+    $cmd_str = implode("\r\n", $cmd_str);
+    $this->send_raw_command($cmd_str);
+    
+    #reply
+    $rs = array();
+    foreach($cmd as $c) {
+      $rs[] = $this->read_reply($c);
+    }
+    return (count($commands) == 1) ? $rs[0] : $rs;
   }
   
   private function send_raw_command($cmd)

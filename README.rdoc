@@ -1,16 +1,33 @@
-= php5-Redis
+= php5-redis
 
-I'm currently learning how to write PHP extensions in C or C++. I wanted
-to build something interesting, and thus decided to write class for
-Redis[http://code.google.com/p/redis].
+Yet another pure PHP client class for Redis. Someday it might be ported to be
+a PHP extension, written in C or C++.
 
-A pure PHP implementation is available. I wrote it to understand the protocol,
-and have a pure PHP test file, which will be used to test the PHP extension.
-I went a little overboard and wrote something quite complete, and definitely
-usable right now.
+== Features
 
-As for the PHP extension only the generic code has been written yet. Everything
-has yet to be done.
+It's currently compatible with Redis 1.2.x and supports strings, lists, sets,
+sorted sets and pipelining. It doesn't support Redis 1.3.x features yet, like
+hashes.
+
+== Clusters
+
+Clusters are supported through the <tt>RedisCluster</tt> class, which is a
+drop-in replacement for the <tt>Redis</tt> class, except for a few limitations:
+
+- There is no support for pipelining (yet). This should be doable by dispatching
+  calls to their particular server.
+- MSET and MGET actually read and write from a single server, while they
+  should dispatch the keys between servers.
+- MULTI/EXEC won't work as expected. <tt>RedisCluster</tt> should remember
+  the MULTI command and send it whenever a command is sent to a new server.
+  Contacted servers must be remembered too, in order for EXEC and DISCARD
+  to work.
+
+== Extension
+
+Only the generic code has been written yet. Everything has yet to be done.
+
+== Author
 
 - Julien Portalier <ysbaddaden@gmail.com>
 

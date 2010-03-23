@@ -198,12 +198,12 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->sunionstore('s1s2s3', 's1', 's2', 's3'), 3);
   }
   
-  function test_pipe()
+  function test_pipeline()
   {
     if ($this->redis instanceof Redis)
     {
-      $this->assert_null($this->redis->pipe(function() {}));
-      $this->assert_equal($this->redis->pipe(function($pipe)
+      $this->assert_null($this->redis->pipeline(function() {}));
+      $this->assert_equal($this->redis->pipeline(function($pipe)
       {
         $pipe->mset(array('key1' => 1, 'key2' => 4));
         $pipe->set('key3', 45);

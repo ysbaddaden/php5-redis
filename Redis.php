@@ -217,7 +217,7 @@ class Redis
     }
   }
   
-  function pipe($closure)
+  function pipeline($closure)
   {
     $pipe = new RedisPipeline($this);
     $closure($pipe);

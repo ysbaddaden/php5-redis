@@ -56,6 +56,7 @@
 # or integers depending on the type of the keys, or nulls if a key doesn't
 # exist.
 # 
+# TODO: Properly handle MULTI/EXEC (QUEUED replies, EXEC with all replies and DISCARD).
 class Redis
 {
   const ERR_CONNECT   = 1;
@@ -75,6 +76,8 @@ class Redis
   const REP_BOOL      = 5;
   const REP_QUEUED    = 6;
   const REP_PONG      = 7;
+  const REP_ARRAY     = 8;
+  const REP_ASSOC     = 9;
   
   public  $debug = false;
   private $sock;
@@ -83,10 +86,10 @@ class Redis
     # connection
     'auth'         => array(0,  self::CMD_INLINE,    self::REP_OK),
     
-    # multi/exec (redis >= 1.3, untested)
-#    'multi'        => array(0,  self::CMD_INLINE,    self::REP_OK),
-#    'exec'         => array(0,  self::CMD_INLINE),
-#    'discard'      => array(0,  self::CMD_INLINE,    self::REP_OK),
+    # multi/exec (untested)
+    'multi'        => array(0,  self::CMD_INLINE,    self::REP_OK),
+    'exec'         => array(0,  self::CMD_INLINE),
+    'discard'      => array(0,  self::CMD_INLINE,    self::REP_OK),
     
     # generics
     'exists'       => array(1,  self::CMD_INLINE,    self::REP_BOOL),
@@ -119,8 +122,8 @@ class Redis
     'decrby'       => array(2,  self::CMD_INLINE,    self::REP_INT),
     
     # lists
-    'lpush'        => array(2,  self::CMD_BULK,      self::REP_OK),
-    'rpush'        => array(2,  self::CMD_BULK,      self::REP_OK),
+    'lpush'        => array(2,  self::CMD_BULK,      self::REP_BOOL),
+    'rpush'        => array(2,  self::CMD_BULK,      self::REP_BOOL),
     'llen'         => array(1,  self::CMD_INLINE,    self::REP_INT),
     'lrange'       => array(3,  self::CMD_INLINE),
     'ltrim'        => array(3,  self::CMD_INLINE,    self::REP_OK),
@@ -144,7 +147,7 @@ class Redis
     'sunionstore'  => array(-2, self::CMD_INLINE,    self::REP_INT),
     'sdiff'        => array(-1, self::CMD_INLINE),
     'sdiffstore'   => array(-2, self::CMD_INLINE,    self::REP_INT),
-    'smembers'     => array(1,  self::CMD_INLINE),
+    'smembers'     => array(1,  self::CMD_INLINE,    self::REP_ARRAY),
     'srandmember'  => array(1,  self::CMD_INLINE),
     
     # zsets (sorted sets)
@@ -161,15 +164,15 @@ class Redis
     # sorting
     'sort'         => array(-1, self::CMD_INLINE),
     
-    # hashes (redis >= 1.3, untested)
-#    'hset'         => array(3, self::CMD_MULTIBULK,  self::REP_BOOL),
-#    'hget'         => array(2, self::CMD_BULK),
-#    'hdel'         => array(2, self::CMD_BULK),
-#    'hlen'         => array(1, self::CMD_INLINE),
-#    'hkeys'        => array(2, self::CMD_INLINE),
-#    'hvals'        => array(1, self::CMD_INLINE),
-#    'hgetall'      => array(1, self::CMD_INLINE),
-#    'hexists'      => array(1, self::CMD_BULK),
+    # hashes
+    'hset'         => array(3, self::CMD_MULTIBULK,  self::REP_BOOL),
+    'hget'         => array(2, self::CMD_BULK),
+    'hdel'         => array(2, self::CMD_BULK,       self::REP_BOOL),
+    'hlen'         => array(1, self::CMD_INLINE,     self::REP_INT),
+    'hkeys'        => array(2, self::CMD_INLINE),
+    'hvals'        => array(1, self::CMD_INLINE),
+    'hgetall'      => array(1, self::CMD_INLINE,     self::REP_ASSOC),
+    'hexists'      => array(1, self::CMD_BULK,       self::REP_BOOL),
     
     # persistence
     'save'         => array(0,  self::CMD_INLINE,    self::REP_OK),
@@ -362,7 +365,6 @@ class Redis
   }
   
   # :nodoc:
-  # IMPROVE: properly handle MULTI/EXEC, especially when QUEUED replies.
   function read_reply($cmd)
   {
     $rs = $this->read_raw_reply();
@@ -375,6 +377,13 @@ class Redis
       case self::REP_OK:     return ($rs == 'OK');
       case self::REP_FLOAT:  return (double)$rs;
       case self::REP_PONG:   return ($rs == 'PONG');
+      case self::REP_ARRAY:  return ($rs !== null) ? $rs : array();
+      case self::REP_ASSOC:
+        $ary = array();
+        for ($i=0; $i<count($rs); $i+=2) {
+          $ary[$rs[$i]] = $rs[$i+1];
+        }
+        return $ary;
     }
   }
   

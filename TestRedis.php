@@ -188,12 +188,28 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->sunionstore('s1s2s3', 's1', 's2', 's3'), 3);
   }
   
-#  function test_hashes()
-#  {
-#    $this->assert_true($this->redis->hset('profile:1', 'name', 'John Doe'));
-#    $this->assert_true($this->redis->hset('profile:1', 'login', 'john'));
-#    $this->assert_true($this->redis->hset('profile:1', 'password', 'doe'));
-#  }
+  function test_hashes()
+  {
+    # hexists / hset / hlen
+    $this->assert_false($this->redis->hexists('profile:1', 'name'));
+    
+    $this->assert_true($this->redis->hset('profile:1', 'name', 'John Doe'));
+    $this->assert_equal($this->redis->hlen('profile:1'), 1);
+    $this->assert_true($this->redis->hexists('profile:1', 'name'));
+    
+    $this->assert_true($this->redis->hset('profile:1', 'login', 'john'));
+    $this->assert_true($this->redis->hset('profile:1', 'password', 'doe'));
+    $this->assert_equal($this->redis->hlen('profile:1'), 3);
+    
+    # hkeys / hvals / hgetall
+    $this->assert_equal($this->redis->hkeys('profile:1'), array('name', 'login', 'password'));
+    $this->assert_equal($this->redis->hvals('profile:1'), array('John Doe', 'john', 'doe'));
+    $this->assert_equal($this->redis->hgetall('profile:1'), array('name' => 'John Doe', 'login' => 'john', 'password' => 'doe'));
+    
+    # hdel
+    $this->assert_true($this->redis->hdel('profile:1', 'login'));
+    $this->assert_false($this->redis->hexists('profile:1', 'login'));
+  }
   
   function test_pipeline()
   {

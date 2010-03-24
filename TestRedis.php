@@ -7,7 +7,7 @@ class TestRedis extends Test\Unit\TestCase
   
   function setup()
   {
-    $this->redis = new Redis(array('db' => 0xF));
+    $this->redis = new Redis(array('db' => 0xF, 'port' => 6380));
     $this->redis->debug = in_array('-d', $_SERVER['argv']);
   }
   
@@ -22,16 +22,6 @@ class TestRedis extends Test\Unit\TestCase
       $r = new Redis(array('host' => 'localhost', 'port' => '1234567890'));
       @$r->connect();
     }, 'Redis::ERR_CONNECT');
-  }
-  
-  function test_bad_commands()
-  {
-    $r = $this->redis;
-    $this->assert_throws('RedisException', function() use ($r) { $r->get(); });
-    $this->assert_throws('RedisException', function() use ($r) { $r->set('a', 'b', 'c'); });
-    $this->assert_throws('RedisException', function() use ($r) { $r->getset('a'); });
-    $this->assert_throws('RedisException', function() use ($r) { $r->azerty('a'); },
-      'unknown redis command makes redis to return an error');
   }
   
   function test_string_commands()
@@ -51,14 +41,14 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->mget('keyA', 'keyB'), array('foobar', null));
     
     $this->assert_true($this->redis->mset(array('keyA' => 'blabla', 'keyB' => 'foobar')));
-    $this->assert_true($this->redis->mget(array('keyA', 'keyB')));
+    $this->assert_equal($this->redis->mget(array('keyA', 'keyB')), array('blabla', 'foobar'));
     
     # setnx
     $this->assert_true($this->redis->setnx('keyC', 'foo'));
     $this->assert_false($this->redis->setnx('keyC', 'bar'));
     $this->assert_equal($this->redis->get('keyC'), 'foo');
     
-    # setnx
+    # msetnx
     $this->assert_true($this->redis->msetnx(array('keyD' => 'foo', 'keyE' => 'bar')));
     $this->assert_false($this->redis->msetnx(array('keyD' => 'bar', 'keyE' => 'foo')));
     $this->assert_equal($this->redis->mget(array('keyD', 'keyE')), array('foo', 'bar'));
@@ -232,8 +222,26 @@ class TestRedisCluster extends TestRedis
 {
   function setup()
   {
-    $this->redis = new RedisCluster(array(array('db' => 0xF)));
-    $this->redis->debug = in_array('-d', $_SERVER['argv']);
+    $server1 = array('db' => 0xF, 'port' => 6380);
+    $server2 = array('db' => 0xF, 'port' => 6381);
+    $debug   = in_array('-d', $_SERVER['argv']);
+    
+    $this->redis = new RedisCluster(array($server1, $server2), function($key) {
+      return ($key == 'keyA') ? 1 : 0;
+    }, $debug);
+  }
+  
+  function test_server_commands()
+  {
+    $this->assert_true($this->redis->send_command(0, 'ping'));
+    $this->assert_true($this->redis->send_command(1, 'ping'));
+  }
+  
+  function teardown()
+  {
+    $this->redis->send_command(0, 'flushdb');
+    $this->redis->send_command(1, 'flushdb');
+    unlink(dirname(__FILE__).'/dump.rdb');
   }
 }
 

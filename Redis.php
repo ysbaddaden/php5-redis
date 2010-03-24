@@ -227,12 +227,12 @@ class Redis
   # :nodoc:
   function lookup_command($name)
   {
-    $cmd = isset(static::$commands[$name]) ?
-      static::$commands[$name] : array(-1, self::CMD_MULTIBULK);
+    $cmd = isset(self::$commands[$name]) ?
+      self::$commands[$name] : array(-1, self::CMD_MULTIBULK);
     
     return array(
       'name'  => $name,
-      'arity' => $cmd[0],
+#      'arity' => $cmd[0],
       'type'  => $cmd[1],
       'reply' => isset($cmd[2]) ? $cmd[2] : null,
     );
@@ -245,18 +245,18 @@ class Redis
       $args = $args[0];
     }
     
-    if (( $cmd['arity'] > 0
-      and count($args) != $cmd['arity']))
-    {
-      throw new RedisException(sprintf("Redis command %s takes %d arguments, but got %d.",
-        $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
-    }
-    elseif ($cmd['arity'] < 0
-      and count($args) < -$cmd['arity'])
-    {
-      throw new RedisException(sprintf("Redis command %s takes at least %d arguments, but got %d.",
-        $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
-    }
+#    if ($cmd['arity'] > 0
+#      and count($args) != $cmd['arity'])
+#    {
+#      throw new RedisException(sprintf("Redis command %s takes %d arguments, but got %d.",
+#        $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
+#    }
+#    elseif ($cmd['arity'] < 0
+#      and count($args) < -$cmd['arity'])
+#    {
+#      throw new RedisException(sprintf("Redis command %s takes at least %d arguments, but got %d.",
+#        $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
+#    }
     
     switch($cmd['type'])
     {

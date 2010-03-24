@@ -6,11 +6,13 @@ class RedisServers implements Countable, ArrayAccess
   private $servers = array();
   private $configs;
   private $count;
+  public  $debug = false;
   
-  function __construct($configs)
+  function __construct($configs, $debug=false)
   {
     $this->configs = $configs;
     $this->count   = empty($configs) ? 1 : count($configs);
+    $this->debug   = $debug;
   }
   
   function count() {
@@ -38,6 +40,7 @@ class RedisServers implements Countable, ArrayAccess
         $config = $this->configs[$index];
       }
       $this->servers[$index] = new Redis($config);
+      $this->servers[$index]->debug = $this->debug;
     }
     return $this->servers[$index];
   }

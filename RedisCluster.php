@@ -2,13 +2,6 @@
 
 # Shards keys within multiple Redis servers.
 # 
-# When using a cluster of servers, some redis commands may lead
-# to problems (eg: multi/exec, mset, mget, etc), since keys must be on the
-# same servers for these to work.
-# 
-# IMPROVE: implement mset/mget methods so that keys could still be sharded
-# among servers.
-# 
 # =Key Hashing
 # 
 # For commands like SORT to work, all matching keys are expected to be in a
@@ -25,6 +18,8 @@
 #     return md5($hkey[0]);
 #   });
 # 
+# TODO: Proper MULTI/EXEC functionality across servers.
+# TODO: Support for PIPELINE across servers.
 class RedisCluster
 {
   private $servers;

@@ -83,9 +83,10 @@ class Redis
     # connection
     'auth'         => array(0,  self::CMD_INLINE,    self::REP_OK),
     
-    # multi/exec (redis >= 1.3)
-    'multi'        => array(0,  self::CMD_INLINE,    self::REP_QUEUED),
-    'exec'         => array(0,  self::CMD_INLINE),
+    # multi/exec (redis >= 1.3, untested)
+#    'multi'        => array(0,  self::CMD_INLINE,    self::REP_OK),
+#    'exec'         => array(0,  self::CMD_INLINE),
+#    'discard'      => array(0,  self::CMD_INLINE,    self::REP_OK),
     
     # generics
     'exists'       => array(1,  self::CMD_INLINE,    self::REP_BOOL),
@@ -159,6 +160,16 @@ class Redis
     
     # sorting
     'sort'         => array(-1, self::CMD_INLINE),
+    
+    # hashes (redis >= 1.3, untested)
+#    'hset'         => array(3, self::CMD_MULTIBULK,  self::REP_BOOL),
+#    'hget'         => array(2, self::CMD_BULK),
+#    'hdel'         => array(2, self::CMD_BULK),
+#    'hlen'         => array(1, self::CMD_INLINE),
+#    'hkeys'        => array(2, self::CMD_INLINE),
+#    'hvals'        => array(1, self::CMD_INLINE),
+#    'hgetall'      => array(1, self::CMD_INLINE),
+#    'hexists'      => array(1, self::CMD_BULK),
     
     # persistence
     'save'         => array(0,  self::CMD_INLINE,    self::REP_OK),
@@ -351,6 +362,7 @@ class Redis
   }
   
   # :nodoc:
+  # IMPROVE: properly handle MULTI/EXEC, especially when QUEUED replies.
   function read_reply($cmd)
   {
     $rs = $this->read_raw_reply();

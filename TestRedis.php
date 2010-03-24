@@ -12,7 +12,7 @@ class TestRedis extends Test\Unit\TestCase
   }
   
   function teardown() {
-    $this->redis->quit();
+    $this->redis->flushdb();
   }
   
   function test_connect_errors()
@@ -188,6 +188,13 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->sunionstore('s1s2s3', 's1', 's2', 's3'), 3);
   }
   
+#  function test_hashes()
+#  {
+#    $this->assert_true($this->redis->hset('profile:1', 'name', 'John Doe'));
+#    $this->assert_true($this->redis->hset('profile:1', 'login', 'john'));
+#    $this->assert_true($this->redis->hset('profile:1', 'password', 'doe'));
+#  }
+  
   function test_pipeline()
   {
     if ($this->redis instanceof Redis)
@@ -241,7 +248,6 @@ class TestRedisCluster extends TestRedis
   {
     $this->redis->send_command(0, 'flushdb');
     $this->redis->send_command(1, 'flushdb');
-    unlink(dirname(__FILE__).'/dump.rdb');
   }
 }
 

@@ -84,107 +84,107 @@ class Redis
   
   private static $commands = array(
     # connection
-    'auth'         => array(0,  self::CMD_INLINE,    self::REP_OK),
+    'auth'         => array(self::CMD_INLINE,    self::REP_OK),
     
     # multi/exec (untested)
-    'multi'        => array(0,  self::CMD_INLINE,    self::REP_OK),
-    'exec'         => array(0,  self::CMD_INLINE),
-    'discard'      => array(0,  self::CMD_INLINE,    self::REP_OK),
+    'multi'        => array(self::CMD_INLINE,    self::REP_OK),
+    'exec'         => array(self::CMD_INLINE),
+    'discard'      => array(self::CMD_INLINE,    self::REP_OK),
     
     # generics
-    'exists'       => array(1,  self::CMD_INLINE,    self::REP_BOOL),
-    'del'          => array(-1, self::CMD_INLINE,    self::REP_INT),
-    'type'         => array(1,  self::CMD_INLINE),
-    'keys'         => array(1,  self::CMD_INLINE),
-    'randomkey'    => array(1,  self::CMD_INLINE),
-    'rename'       => array(2,  self::CMD_INLINE,    self::REP_OK),
-    'renamenx'     => array(2,  self::CMD_INLINE,    self::REP_BOOL),
-    'dbsize'       => array(0,  self::CMD_INLINE,    self::REP_INT),
-    'expire'       => array(2,  self::CMD_INLINE,    self::REP_BOOL),
-    'expireat'     => array(2,  self::CMD_INLINE,    self::REP_BOOL),
-    'ttl'          => array(1,  self::CMD_INLINE,    self::REP_INT),
-    'select'       => array(1,  self::CMD_INLINE,    self::REP_OK),
-    'move'         => array(2,  self::CMD_INLINE,    self::REP_BOOL),
-    'flushdb'      => array(0,  self::CMD_INLINE,    self::REP_OK),
-    'flushall'     => array(0,  self::CMD_INLINE,    self::REP_OK),
+    'exists'       => array(self::CMD_INLINE,    self::REP_BOOL),
+    'del'          => array(self::CMD_INLINE,    self::REP_INT),
+    'type'         => array(self::CMD_INLINE),
+    'keys'         => array(self::CMD_INLINE),
+    'randomkey'    => array(self::CMD_INLINE),
+    'rename'       => array(self::CMD_INLINE,    self::REP_OK),
+    'renamenx'     => array(self::CMD_INLINE,    self::REP_BOOL),
+    'dbsize'       => array(self::CMD_INLINE,    self::REP_INT),
+    'expire'       => array(self::CMD_INLINE,    self::REP_BOOL),
+    'expireat'     => array(self::CMD_INLINE,    self::REP_BOOL),
+    'ttl'          => array(self::CMD_INLINE,    self::REP_INT),
+    'select'       => array(self::CMD_INLINE,    self::REP_OK),
+    'move'         => array(self::CMD_INLINE,    self::REP_BOOL),
+    'flushdb'      => array(self::CMD_INLINE,    self::REP_OK),
+    'flushall'     => array(self::CMD_INLINE,    self::REP_OK),
     
     # strings
-    'set'          => array(2,  self::CMD_BULK,      self::REP_OK),
-    'get'          => array(1,  self::CMD_INLINE),
-    'getset'       => array(2,  self::CMD_BULK),
-    'setnx'        => array(2,  self::CMD_BULK,      self::REP_BOOL),
-    'mget'         => array(-1, self::CMD_INLINE),
-    'mset'         => array(-2, self::CMD_MULTIBULK, self::REP_OK),
-    'msetnx'       => array(-2, self::CMD_MULTIBULK, self::REP_BOOL),
-    'incr'         => array(1,  self::CMD_INLINE,    self::REP_INT),
-    'incrby'       => array(2,  self::CMD_INLINE,    self::REP_INT),
-    'decr'         => array(1,  self::CMD_INLINE,    self::REP_INT),
-    'decrby'       => array(2,  self::CMD_INLINE,    self::REP_INT),
+    'set'          => array(self::CMD_BULK,      self::REP_OK),
+    'get'          => array(self::CMD_INLINE),
+    'getset'       => array(self::CMD_BULK),
+    'setnx'        => array(self::CMD_BULK,      self::REP_BOOL),
+    'mget'         => array(self::CMD_INLINE),
+    'mset'         => array(self::CMD_MULTIBULK, self::REP_OK),
+    'msetnx'       => array(self::CMD_MULTIBULK, self::REP_BOOL),
+    'incr'         => array(self::CMD_INLINE,    self::REP_INT),
+    'incrby'       => array(self::CMD_INLINE,    self::REP_INT),
+    'decr'         => array(self::CMD_INLINE,    self::REP_INT),
+    'decrby'       => array(self::CMD_INLINE,    self::REP_INT),
     
     # lists
-    'lpush'        => array(2,  self::CMD_BULK,      self::REP_BOOL),
-    'rpush'        => array(2,  self::CMD_BULK,      self::REP_BOOL),
-    'llen'         => array(1,  self::CMD_INLINE,    self::REP_INT),
-    'lrange'       => array(3,  self::CMD_INLINE),
-    'ltrim'        => array(3,  self::CMD_INLINE,    self::REP_OK),
-    'lindex'       => array(2,  self::CMD_INLINE),
-    'lset'         => array(3,  self::CMD_BULK,      self::REP_OK),
-    'lrem'         => array(3,  self::CMD_BULK,      self::REP_INT),
-    'lpop'         => array(1,  self::CMD_INLINE),
-    'rpop'         => array(1,  self::CMD_INLINE),
-    'rpoplpush'    => array(2,  self::CMD_INLINE),
+    'lpush'        => array(self::CMD_BULK,      self::REP_BOOL),
+    'rpush'        => array(self::CMD_BULK,      self::REP_BOOL),
+    'llen'         => array(self::CMD_INLINE,    self::REP_INT),
+    'lrange'       => array(self::CMD_INLINE),
+    'ltrim'        => array(self::CMD_INLINE,    self::REP_OK),
+    'lindex'       => array(self::CMD_INLINE),
+    'lset'         => array(self::CMD_BULK,      self::REP_OK),
+    'lrem'         => array(self::CMD_BULK,      self::REP_INT),
+    'lpop'         => array(self::CMD_INLINE),
+    'rpop'         => array(self::CMD_INLINE),
+    'rpoplpush'    => array(self::CMD_INLINE),
     
     # sets
-    'sadd'         => array(2,  self::CMD_BULK,      self::REP_BOOL),
-    'srem'         => array(2,  self::CMD_BULK,      self::REP_BOOL),
-    'spop'         => array(1,  self::CMD_INLINE),
-    'smove'        => array(3,  self::CMD_BULK,      self::REP_BOOL),
-    'scard'        => array(1,  self::CMD_INLINE,    self::REP_INT),
-    'sismember'    => array(2,  self::CMD_BULK,      self::REP_BOOL),
-    'sinter'       => array(-1, self::CMD_INLINE),
-    'sinterstore'  => array(-2, self::CMD_INLINE,    self::REP_INT),
-    'sunion'       => array(-1, self::CMD_INLINE),
-    'sunionstore'  => array(-2, self::CMD_INLINE,    self::REP_INT),
-    'sdiff'        => array(-1, self::CMD_INLINE),
-    'sdiffstore'   => array(-2, self::CMD_INLINE,    self::REP_INT),
-    'smembers'     => array(1,  self::CMD_INLINE,    self::REP_ARRAY),
-    'srandmember'  => array(1,  self::CMD_INLINE),
+    'sadd'         => array(self::CMD_BULK,      self::REP_BOOL),
+    'srem'         => array(self::CMD_BULK,      self::REP_BOOL),
+    'spop'         => array(self::CMD_INLINE),
+    'smove'        => array(self::CMD_BULK,      self::REP_BOOL),
+    'scard'        => array(self::CMD_INLINE,    self::REP_INT),
+    'sismember'    => array(self::CMD_BULK,      self::REP_BOOL),
+    'sinter'       => array(self::CMD_INLINE),
+    'sinterstore'  => array(self::CMD_INLINE,    self::REP_INT),
+    'sunion'       => array(self::CMD_INLINE),
+    'sunionstore'  => array(self::CMD_INLINE,    self::REP_INT),
+    'sdiff'        => array(self::CMD_INLINE),
+    'sdiffstore'   => array(self::CMD_INLINE,    self::REP_INT),
+    'smembers'     => array(self::CMD_INLINE,    self::REP_ARRAY),
+    'srandmember'  => array(self::CMD_INLINE),
     
     # zsets (sorted sets)
-    'zadd'             => array(3,  self::CMD_BULK,   self::REP_BOOL),
-    'zrem'             => array(2,  self::CMD_INLINE, self::REP_BOOL),
-    'zincrby'          => array(3,  self::CMD_INLINE, self::REP_INT),
-    'zrange'           => array(3,  self::CMD_INLINE),
-    'zrevrange'        => array(-3, self::CMD_INLINE),
-    'zrangebyscore'    => array(-3, self::CMD_INLINE),
-    'zcard'            => array(1,  self::CMD_INLINE, self::REP_INT),
-    'zscore'           => array(1,  self::CMD_INLINE, self::REP_FLOAT),
-    'zremrangebyscore' => array(3,  self::CMD_INLINE, self::REP_INT),
+    'zadd'             => array(self::CMD_BULK,   self::REP_BOOL),
+    'zrem'             => array(self::CMD_INLINE, self::REP_BOOL),
+    'zincrby'          => array(self::CMD_INLINE, self::REP_INT),
+    'zrange'           => array(self::CMD_INLINE),
+    'zrevrange'        => array(self::CMD_INLINE),
+    'zrangebyscore'    => array(self::CMD_INLINE),
+    'zcard'            => array(self::CMD_INLINE, self::REP_INT),
+    'zscore'           => array(self::CMD_INLINE, self::REP_FLOAT),
+    'zremrangebyscore' => array(self::CMD_INLINE, self::REP_INT),
     
     # sorting
-    'sort'         => array(-1, self::CMD_INLINE),
+    'sort'         => array(self::CMD_INLINE),
     
     # hashes
-    'hset'         => array(3, self::CMD_MULTIBULK,  self::REP_BOOL),
-    'hget'         => array(2, self::CMD_BULK),
-    'hdel'         => array(2, self::CMD_BULK,       self::REP_BOOL),
-    'hlen'         => array(1, self::CMD_INLINE,     self::REP_INT),
-    'hkeys'        => array(2, self::CMD_INLINE),
-    'hvals'        => array(1, self::CMD_INLINE),
-    'hgetall'      => array(1, self::CMD_INLINE,     self::REP_ASSOC),
-    'hexists'      => array(1, self::CMD_BULK,       self::REP_BOOL),
+    'hset'         => array(self::CMD_MULTIBULK,  self::REP_BOOL),
+    'hget'         => array(self::CMD_BULK),
+    'hdel'         => array(self::CMD_BULK,       self::REP_BOOL),
+    'hlen'         => array(self::CMD_INLINE,     self::REP_INT),
+    'hkeys'        => array(self::CMD_INLINE),
+    'hvals'        => array(self::CMD_INLINE),
+    'hgetall'      => array(self::CMD_INLINE,     self::REP_ASSOC),
+    'hexists'      => array(self::CMD_BULK,       self::REP_BOOL),
     
     # persistence
-    'save'         => array(0,  self::CMD_INLINE,    self::REP_OK),
-    'bgsave'       => array(0,  self::CMD_INLINE,    self::REP_OK),
-    'bgrewriteaof' => array(0,  self::CMD_INLINE,    self::REP_OK),
-    'lastsave'     => array(0,  self::CMD_INLINE,    self::REP_INT),
+    'save'         => array(self::CMD_INLINE,    self::REP_OK),
+    'bgsave'       => array(self::CMD_INLINE,    self::REP_OK),
+    'bgrewriteaof' => array(self::CMD_INLINE,    self::REP_OK),
+    'lastsave'     => array(self::CMD_INLINE,    self::REP_INT),
     
     # server
-    'ping'         => array(0,  self::CMD_INLINE,    self::REP_PONG),
-    'shutdown'     => array(0,  self::CMD_INLINE),
-    'info'         => array(0,  self::CMD_INLINE),
-    'slaveof'      => array(0,  self::CMD_INLINE,    self::REP_OK),
+    'ping'         => array(self::CMD_INLINE,    self::REP_PONG),
+    'shutdown'     => array(self::CMD_INLINE),
+    'info'         => array(self::CMD_INLINE),
+    'slaveof'      => array(self::CMD_INLINE,    self::REP_OK),
   );
   
   function __construct($config=null) {
@@ -242,13 +242,12 @@ class Redis
   function lookup_command($name)
   {
     $cmd = isset(self::$commands[$name]) ?
-      self::$commands[$name] : array(-1, self::CMD_MULTIBULK);
+      self::$commands[$name] : array(self::CMD_MULTIBULK);
     
     return array(
       'name'  => $name,
-#      'arity' => $cmd[0],
-      'type'  => $cmd[1],
-      'reply' => isset($cmd[2]) ? $cmd[2] : null,
+      'type'  => $cmd[0],
+      'reply' => isset($cmd[1]) ? $cmd[1] : null,
     );
   }
   
@@ -258,19 +257,6 @@ class Redis
     if (isset($args[0]) and is_array($args[0])) {
       $args = $args[0];
     }
-    
-#    if ($cmd['arity'] > 0
-#      and count($args) != $cmd['arity'])
-#    {
-#      throw new RedisException(sprintf("Redis command %s takes %d arguments, but got %d.",
-#        $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
-#    }
-#    elseif ($cmd['arity'] < 0
-#      and count($args) < -$cmd['arity'])
-#    {
-#      throw new RedisException(sprintf("Redis command %s takes at least %d arguments, but got %d.",
-#        $cmd['name'], $cmd['arity'], count($args)), Redis::ERR_ARG_COUNT);
-#    }
     
     switch($cmd['type'])
     {

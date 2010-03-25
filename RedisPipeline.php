@@ -1,5 +1,6 @@
 <?php
 
+# :nodoc:
 class RedisPipeline
 {
   private $redis;
@@ -19,6 +20,10 @@ class RedisPipeline
       return null;
     }
     return $this->redis->send_command($this->commands);
+  }
+  
+  function commands() {
+    return $this->commands;
   }
 }
 

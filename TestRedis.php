@@ -213,20 +213,17 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_pipeline()
   {
-    if ($this->redis instanceof Redis)
+    $this->assert_null($this->redis->pipeline(function() {}));
+    $this->assert_equal($this->redis->pipeline(function($pipe)
     {
-      $this->assert_null($this->redis->pipeline(function() {}));
-      $this->assert_equal($this->redis->pipeline(function($pipe)
-      {
-        $pipe->mset(array('key1' => 1, 'key2' => 4));
-        $pipe->set('key3', 45);
-        $pipe->incr('key1');
-        $pipe->decr('key2');
-        $pipe->incr('key3');
-        $pipe->incr('key4');
-        $pipe->decr('key5');
-      }), array(true, true, 2, 3, 46, 1, -1));
-    }
+      $pipe->mset(array('key1' => 1, 'key2' => 4));
+      $pipe->set('key3', 45);
+      $pipe->incr('key1');
+      $pipe->decr('key2');
+      $pipe->incr('key3');
+      $pipe->incr('key4');
+      $pipe->decr('key5');
+    }), array(true, true, 2, 3, 46, 1, -1));
   }
   
   function test_server_commands()

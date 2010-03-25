@@ -2,11 +2,12 @@
 # Copyright (c) 2010 Julien Portalier <ysbaddaden@gmail.com>
 # Distributed as-is under the MIT license.
 
-# Redis client class.
+# Redis client.
 # 
 # = Commands
 # 
-# See http://code.google.com/redis for the full list of commands.
+# See http://code.google.com/redis for the full list of commands
+# and their documentation.
 # 
 # = Examples
 # 

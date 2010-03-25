@@ -33,16 +33,8 @@ class RedisCluster
   
   function __call($func, $args)
   {
-#    if (!isset($args[0])) {
-#      trigger_error('The command '.$func.' makes no sense on a cluster.', E_USER_WARNING);
-#    }
-    $server = isset($args[0]) ? $this->hash($func, $args[0]) : 0;
+    $server = $this->server_for($func, $args);
     return $this->send_command($server, $func, $args);
-  }
-  
-  # Sends a command to a specific server.
-  function send_command($server, $command, $args=array()) {
-    return call_user_func_array(array($this->servers[$server], $command), $args);
   }
   
   function & mget($keys)
@@ -65,6 +57,34 @@ class RedisCluster
       $result = array_merge($result, $server_result);
     }
     return $result;
+  }
+  
+  function pipeline($closure)
+  {
+    # executes the closure
+    $pipe = new RedisPipeline($this);
+    $closure($pipe);
+    
+    # dispatches commands by server (keeping the index)
+    $commands_by_servers = array();
+    foreach($pipe->commands() as $i => $cmd)
+    {
+      $server = $this->server_for($cmd[0], $cmd[1]);
+      $commands_by_servers[$server][$i] = $cmd;
+    }
+    
+    # executes the commands and dispatches results by their original index
+    $rs = array();
+    foreach($commands_by_servers as $server => $commands)
+    {
+      $replies = $this->send_commands($server, $commands);
+      foreach($replies as $reply)
+      {
+        $rs[key($commands)] = $reply;
+        next($commands);
+      }
+    }
+    return $rs;
   }
   
   function mset($keys) {
@@ -92,8 +112,17 @@ class RedisCluster
     return $rs;
   }
   
-  function pipeline() {
-    trigger_error("Pipelining isn't supported yet in RedisCluster.", E_USER_ERROR);
+  # Sends a command to a specific server.
+  function send_command($server, $command, $args=array()) {
+    return call_user_func_array(array($this->servers[$server], $command), $args);
+  }
+  
+  private function send_commands($server, $commands) {
+    return call_user_func_array(array($this->servers[$server], 'send_command'), array($commands));
+  }
+  
+  private function server_for($func, $args) {
+    return isset($args[0]) ? $this->hash($func, $args[0]) : 0;
   }
   
   private function hash($func, $key)

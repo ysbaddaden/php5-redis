@@ -14,12 +14,13 @@ hashes.
 Clusters are supported through the <tt>RedisCluster</tt> class, which is a
 drop-in replacement for the <tt>Redis</tt> class, except for a few limitations:
 
-- There is no support for pipelining (yet). This should be doable by dispatching
-  calls to their particular server.
 - MULTI/EXEC won't work as expected. <tt>RedisCluster</tt> should remember
   the MULTI command and send it whenever a command is sent to a new server.
   Contacted servers must be remembered too, in order for EXEC and DISCARD
   to work.
+- <tt>RedisCluster->pipeline()</tt> doesn't support MGET.
+
+Everything else is supported, even +MGET+, +MSET+ and +MSETNX+.
 
 == Extension
 

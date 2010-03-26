@@ -202,12 +202,14 @@ class TestRedis extends Test\Unit\TestCase
     {
       $pipe->mset(array('key1' => 1, 'key2' => 4));
       $pipe->set('key3', 45);
+      $pipe->msetnx(array('key1' => 2));
       $pipe->incr('key1');
       $pipe->decr('key2');
       $pipe->incr('key3');
       $pipe->incr('key4');
       $pipe->decr('key5');
-    }), array(true, true, 2, 3, 46, 1, -1));
+      $pipe->mget('key1', 'key2');
+    }), array(true, true, false, 2, 3, 46, 1, -1, array(2, 3)));
   }
   
   function test_server_commands()
@@ -231,7 +233,7 @@ class TestRedisCluster extends TestRedis
     $debug   = in_array('-d', $_SERVER['argv']);
     
     $this->redis = new RedisCluster(array($server1, $server2), function($key) {
-      return ($key == 'keyA') ? 1 : 0;
+      return ($key == 'keyA' or $key == 'key2' or $key == 'key7') ? 1 : 0;
     }, $debug);
   }
   

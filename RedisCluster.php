@@ -66,24 +66,78 @@ class RedisCluster
     $closure($pipe);
     
     # dispatches commands by server (keeping the index)
-    $commands_by_servers = array();
+    $commands_by_server = array();
     foreach($pipe->commands() as $i => $cmd)
     {
-      $server = $this->server_for($cmd[0], $cmd[1]);
-      $commands_by_servers[$server][$i] = $cmd;
+      switch($cmd[0])
+      {
+        case 'mget':
+          $keys = is_array($cmd[1][0]) ? $cmd[1][0] : $cmd[1];
+          
+          $mgets_by_server = array();
+          foreach($keys as $key)
+          {
+            $server = $this->hash($cmd[0], $key);
+            $mgets_by_server[$server][] = $key;
+          }
+          
+          foreach($mgets_by_server as $server => $keys) {
+            $commands_by_server[$server][$i] = array($cmd[0], $keys);
+          }
+        break;
+        
+        case 'mset': case 'msetnx': 
+          $msets_by_server = array();
+          foreach($cmd[1][0] as $key => $value)
+          {
+            $server = $this->hash($cmd[0], $key);
+            $msets_by_server[$server][$key] = $value;
+          }
+          foreach($msets_by_server as $server => $keys) {
+            $commands_by_server[$server][$i] = array($cmd[0], $keys);
+          }
+        break;
+        
+        default:
+          $server = $this->server_for($cmd[0], $cmd[1]);
+          $commands_by_server[$server][$i] = $cmd;
+      }
     }
     
     # executes the commands and dispatches results by their original index
     $rs = array();
-    foreach($commands_by_servers as $server => $commands)
+    foreach($commands_by_server as $server => $commands)
     {
       $replies = $this->send_commands($server, $commands);
-      foreach($replies as $reply)
+      
+      if (!is_array($replies)) {
+        $rs[key($commands)] = $replies;
+      }
+      else
       {
-        $rs[key($commands)] = $reply;
-        next($commands);
+        foreach($replies as $reply)
+        {
+          $i = key($commands);
+          if (!isset($rs[$i])) {
+            $rs[$i] = $reply;
+          }
+          else
+          {
+            if (is_bool($reply)) {
+              $rs[$i] = $rs[$i] and $reply;
+            }
+            elseif (is_array($reply)) {
+              $rs[$i] = array_merge($rs[$i], $reply);
+            }
+            else {
+              trigger_error("Unknown reply type '".gettype($rs)."'", E_USER_WARNING);
+            }
+          }
+          next($commands);
+        }
       }
     }
+    ksort($rs);
     return $rs;
   }
   

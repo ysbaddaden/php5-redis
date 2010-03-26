@@ -208,8 +208,7 @@ class TestRedis extends Test\Unit\TestCase
       $pipe->incr('key3');
       $pipe->incr('key4');
       $pipe->decr('key5');
-      $pipe->mget('key1', 'key2');
-    }), array(true, true, false, 2, 3, 46, 1, -1, array(2, 3)));
+    }), array(true, true, false, 2, 3, 46, 1, -1));
   }
   
   function test_server_commands()

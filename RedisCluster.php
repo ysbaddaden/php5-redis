@@ -73,13 +73,13 @@ class RedisCluster
       $replies = $this->send_commands($server, $commands);
       
       if (!is_array($replies)) {
-        $this->set_dispatched_reply($rs, key($commands), $replies);
+        $this->set_dispatched_reply($rs, key($commands), current($commands), $replies);
       }
       else
       {
         foreach($replies as $reply)
         {
-          $this->set_dispatched_reply($rs, key($commands), $reply);
+          $this->set_dispatched_reply($rs, key($commands), current($commands), $reply);
           next($commands);
         }
       }
@@ -113,22 +113,6 @@ class RedisCluster
     return $rs;
   }
   
-  private function set_dispatched_reply(&$rs, $i, $reply)
-  {
-    if (!isset($rs[$i])) {
-      $rs[$i] = $reply;
-    }
-    elseif (is_bool($reply)) {
-      $rs[$i] = $rs[$i] and $reply;
-    }
-    elseif (is_array($reply)) {
-      $rs[$i] = array_merge($rs[$i], $reply);
-    }
-    else {
-      trigger_error("Unknown reply type '".gettype($reply)."'", E_USER_WARNING);
-    }
-  }
-  
   # Dispatches commands by server (keeping the index for merging the replies correctly).
   private function & dispatch_commands_by_server(&$commands)
   {
@@ -138,18 +122,7 @@ class RedisCluster
       switch($cmd[0])
       {
         case 'mget':
-          $keys = is_array($cmd[1][0]) ? $cmd[1][0] : $cmd[1];
-          
-          $mgets_by_server = array();
-          foreach($keys as $key)
-          {
-            $server = $this->hash($cmd[0], $key);
-            $mgets_by_server[$server][] = $key;
-          }
-          
-          foreach($mgets_by_server as $server => $keys) {
-            $commands_by_server[$server][$i] = array($cmd[0], $keys);
-          }
+          trigger_error("RedisCluster->pipeline() doesn't support the MGET command.", E_USER_ERROR);
         break;
         
         case 'mset': case 'msetnx': 
@@ -170,6 +143,19 @@ class RedisCluster
       }
     }
     return $commands_by_server;
+  }
+  
+  private function set_dispatched_reply(&$rs, $i, $cmd, $reply)
+  {
+    if (!isset($rs[$i])) {
+      $rs[$i] = $reply;
+    }
+    elseif (is_bool($reply)) {
+      $rs[$i] = $rs[$i] and $reply;
+    }
+    else {
+      trigger_error("Unknown reply type '".gettype($reply)."'.", E_USER_WARNING);
+    }
   }
   
   # Sends a command to a specific server.

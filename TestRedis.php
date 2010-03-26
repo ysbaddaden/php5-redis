@@ -211,7 +211,8 @@ class TestRedis extends Test\Unit\TestCase
       $pipe->incr('key3');
       $pipe->incr('key4');
       $pipe->decr('key5');
-    }), array(true, true, false, 2, 3, 46, 1, -1));
+      $pipe->del('key1', 'key2');
+    }), array(true, true, false, 2, 3, 46, 1, -1, 2));
   }
   
   function test_server_commands()
@@ -250,14 +251,14 @@ class TestRedisCluster extends TestRedis
     $this->assert_true($this->redis->send_command(0, 'ping'));
     $this->assert_true($this->redis->send_command(1, 'ping'));
   }
-  /*
+  
   function test_del_command()
   {
     $this->redis->mset(array('key1' => 1, 'key2' => 2));
     $this->assert_equal($this->redis->del('key1', 'key2', 'key3'), 2);
-    $this-assert_false($this->redis->exists('key2'));
+    $this->assert_false($this->redis->exists('key2'));
   }
-  */
+  
   function test_msetnx_command()
   {
     $this->redis->del('key1', 'key2', 'key3');

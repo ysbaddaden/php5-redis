@@ -19,7 +19,6 @@
 #   });
 # 
 # TODO: Proper MULTI/EXEC functionality across servers.
-# FIXME: DEL doesn't shards keys!
 class RedisCluster
 {
   private $servers;
@@ -59,13 +58,32 @@ class RedisCluster
     return $result;
   }
   
+  function del($keys)
+  {
+    if (!is_array($keys)) {
+      $keys = func_get_args();
+    }
+    
+    $keys_by_server = array();
+    foreach($keys as $key)
+    {
+      $server = $this->hash('del', $key);
+      $keys_by_server[$server][] = $key;
+    }
+    
+    $rs = 0;
+    foreach($keys_by_server as $server => $args) {
+      $rs += $this->send_command($server, 'del', $args);
+    }
+    return $rs;
+  }
+  
   # Supports all commands, except for +MGET+ and +MSETNX+.
   function pipeline($closure)
   {
     $pipe = new RedisPipeline($this);
     $closure($pipe);
     
-    # executes the commands and dispatches results by their original index
     $commands_by_server = $this->dispatch_commands_by_server($pipe->commands());
     $rs = array();
     foreach($commands_by_server as $server => $commands)
@@ -92,9 +110,7 @@ class RedisCluster
     return $this->_mset($keys);
   }
   
-  function msetnx($keys)
-  {
-    #trigger_error("RedisCluster doesn't support the MSETNX command yet.", E_USER_ERROR);
+  function msetnx($keys) {
     return $this->_mset($keys, true);
   }
   
@@ -120,13 +136,26 @@ class RedisCluster
   }
   
   # Dispatches commands by server (keeping the index for merging the replies correctly).
-  private function & dispatch_commands_by_server(&$commands)
+  private function & dispatch_commands_by_server(&$commands, $pipe=false)
   {
     $commands_by_server = array();
     foreach($commands as $i => $cmd)
     {
       switch($cmd[0])
       {
+        case 'del':
+          $dels_by_server = array();
+          $keys = is_array($cmd[1][0]) ? $cmd[1][0] : $cmd[1];
+          foreach($keys as $key)
+          {
+            $server = $this->hash($cmd[0], $key);
+            $dels_by_server[$server][] = $key;
+          }
+          foreach($dels_by_server as $server => $keys) {
+            $commands_by_server[$server][$i] = array($cmd[0], $keys);
+          }
+        break;
+        
         case 'mset':
           $msets_by_server = array();
           foreach($cmd[1][0] as $key => $value)
@@ -158,6 +187,9 @@ class RedisCluster
     }
     elseif (is_bool($reply)) {
       $rs[$i] = $rs[$i] and $reply;
+    }
+    elseif (is_int($reply)) {
+      $rs[$i] += $reply;
     }
     else {
       trigger_error("Unknown reply type '".gettype($reply)."'.", E_USER_WARNING);

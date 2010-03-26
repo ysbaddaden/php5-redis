@@ -92,8 +92,10 @@ class RedisCluster
     return $this->_mset($keys);
   }
   
-  function msetnx($keys) {
-    return $this->_mset($keys, true);
+  function msetnx($keys)
+  {
+    trigger_error("RedisCluster doesn't support the MSETNX command yet.", E_USER_ERROR);
+    #return $this->_mset($keys, true);
   }
   
   private function _mset($keys, $nx=false)
@@ -121,11 +123,7 @@ class RedisCluster
     {
       switch($cmd[0])
       {
-        case 'mget':
-          trigger_error("RedisCluster->pipeline() doesn't support the MGET command.", E_USER_ERROR);
-        break;
-        
-        case 'mset': case 'msetnx': 
+        case 'mset':
           $msets_by_server = array();
           foreach($cmd[1][0] as $key => $value)
           {
@@ -135,6 +133,10 @@ class RedisCluster
           foreach($msets_by_server as $server => $keys) {
             $commands_by_server[$server][$i] = array($cmd[0], $keys);
           }
+        break;
+        
+        case 'mget': case 'msetnx':
+          trigger_error("RedisCluster->pipeline() doesn't support the {$cmd[0]} command.", E_USER_ERROR);
         break;
         
         default:

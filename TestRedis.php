@@ -49,9 +49,12 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->get('keyC'), 'foo');
     
     # msetnx
-    $this->assert_true($this->redis->msetnx(array('keyD' => 'foo', 'keyE' => 'bar')));
-    $this->assert_false($this->redis->msetnx(array('keyD' => 'bar', 'keyE' => 'foo')));
-    $this->assert_equal($this->redis->mget(array('keyD', 'keyE')), array('foo', 'bar'));
+    if (get_class($this) == 'TestRedis')
+    {
+      $this->assert_true($this->redis->msetnx(array('keyD' => 'foo', 'keyE' => 'bar')));
+      $this->assert_false($this->redis->msetnx(array('keyD' => 'bar', 'keyE' => 'foo')));
+      $this->assert_equal($this->redis->mget(array('keyD', 'keyE')), array('foo', 'bar'));
+    }
     
     # getset
     $this->assert_null($this->redis->getset('some_key', 'old_value'));
@@ -202,7 +205,7 @@ class TestRedis extends Test\Unit\TestCase
     {
       $pipe->mset(array('key1' => 1, 'key2' => 4));
       $pipe->set('key3', 45);
-      $pipe->msetnx(array('key1' => 2));
+      $pipe->setnx('key1', 2);
       $pipe->incr('key1');
       $pipe->decr('key2');
       $pipe->incr('key3');

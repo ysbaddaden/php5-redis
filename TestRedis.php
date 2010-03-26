@@ -239,16 +239,34 @@ class TestRedisCluster extends TestRedis
     }, $debug);
   }
   
+  function teardown()
+  {
+    $this->redis->send_command(0, 'flushdb');
+    $this->redis->send_command(1, 'flushdb');
+  }
+  
   function test_server_commands()
   {
     $this->assert_true($this->redis->send_command(0, 'ping'));
     $this->assert_true($this->redis->send_command(1, 'ping'));
   }
-  
-  function teardown()
+  /*
+  function test_del_command()
   {
-    $this->redis->send_command(0, 'flushdb');
-    $this->redis->send_command(1, 'flushdb');
+    $this->redis->mset(array('key1' => 1, 'key2' => 2));
+    $this->assert_equal($this->redis->del('key1', 'key2', 'key3'), 2);
+    $this-assert_false($this->redis->exists('key2'));
+  }
+  */
+  function test_msetnx_command()
+  {
+    $this->redis->del('key1', 'key2', 'key3');
+    $this->redis->msetnx(array('key1' => 1, 'key3' => 3));
+    
+    $r = $this->redis;
+    $this->assert_throws('ErrorException', function() use($r) {
+      $r->msetnx(array('key1' => 1, 'key2' => 2));
+    });
   }
 }
 

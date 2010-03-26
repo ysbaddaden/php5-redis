@@ -16,18 +16,13 @@ drop-in replacement for the <tt>Redis</tt> class, except for a few limitations:
 
 - <tt>RedisCluster->pipeline()</tt> doesn't support +MGET+ and +MSETNX+, because
   its too complicated to handle the replies.
+- +MSETNX+ is supported but requires that all the keys are on a single server,
+  since you can't ensure that all the keys or none are set, when keys are
+  sharded between servers.
 - +MULTI/EXEC+ won't work as expected. <tt>RedisCluster</tt> should remember
   the +MULTI+ command and send it whenever a command is sent to a new server.
   Contacted servers must be remembered too, in order for +EXEC+ and +DISCARD+
   to work.
-- +MSETNX+ isn't supported, since you can't ensure that all the keys or none
-  are set, when keys are sharded between servers. Could be implemented using
-  transactions but there is none in Redis (+MULTI/EXEC+ permits to queue
-  commands and to discard or exec them, but it won't pre-apply them).
-  
-  Your best choice with MSETNX in a sharded environment is to be sure all the
-  keys to be set are on a single server. Maybe I'll allow MSETNX and trigger a
-  warning only when the keys are sharded between servers?
 
 Everything else is supported, even +MGET+ and +MSET+.
 

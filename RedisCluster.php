@@ -19,7 +19,7 @@
 #   });
 # 
 # TODO: Proper MULTI/EXEC functionality across servers.
-# TODO: Support for PIPELINE across servers.
+# FIXME: DEL doesn't shards keys!
 class RedisCluster
 {
   private $servers;
@@ -59,7 +59,7 @@ class RedisCluster
     return $result;
   }
   
-  # FIXME: MGET in PIPELINE won't return replies in the right order.
+  # Supports all commands, except for +MGET+ and +MSETNX+.
   function pipeline($closure)
   {
     $pipe = new RedisPipeline($this);
@@ -94,8 +94,8 @@ class RedisCluster
   
   function msetnx($keys)
   {
-    trigger_error("RedisCluster doesn't support the MSETNX command yet.", E_USER_ERROR);
-    #return $this->_mset($keys, true);
+    #trigger_error("RedisCluster doesn't support the MSETNX command yet.", E_USER_ERROR);
+    return $this->_mset($keys, true);
   }
   
   private function _mset($keys, $nx=false)
@@ -106,6 +106,10 @@ class RedisCluster
     {
       $server = $this->hash($cmd, $key);
       $keys_by_server[$server][$key] = $value;
+    }
+    
+    if ($nx and count($keys_by_server) > 1) {
+      throw new ErrorException("MSETNX cannot be sharded between servers. You must ensure all keys are on a single server.", 0, E_USER_WARNING);
     }
     
     $rs = true;

@@ -193,6 +193,9 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_hashes()
   {
+    # REDIS >= 1.3 only
+    try { $this->redis->hlen('profile:1'); } catch(RedisException $e) { return; }
+    
     # hexists / hset / hlen
     $this->assert_false($this->redis->hexists('profile:1', 'name'));
     

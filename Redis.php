@@ -162,6 +162,11 @@ class Redis
     'zcard'            => array(self::CMD_INLINE),
     'zscore'           => array(self::CMD_INLINE, self::REP_FLOAT),
     'zremrangebyscore' => array(self::CMD_INLINE),
+    'zremrangebyrank'  => array(self::CMD_INLINE),
+    'zrank'            => array(self::CMD_INLINE),
+    'zrevrank'         => array(self::CMD_INLINE),
+#    'zunion'           => array(self::CMD_INLINE),
+#    'zinter'           => array(self::CMD_INLINE),
     
     # sorting
     'sort'         => array(self::CMD_INLINE),
@@ -183,7 +188,13 @@ class Redis
     'bgrewriteaof' => array(self::CMD_INLINE,    self::REP_OK),
     'lastsave'     => array(self::CMD_INLINE),
     
+    # pub/sub
+    'subscribe'    => array(self::CMD_INLINE),
+    'unsubscribe'  => array(self::CMD_INLINE),
+    'publish'      => array(self::CMD_BULK),
+    
     # server
+    'config'       => array(self::CMD_BULK),
     'ping'         => array(self::CMD_INLINE,    self::REP_PONG),
     'shutdown'     => array(self::CMD_INLINE),
     'info'         => array(self::CMD_INLINE),

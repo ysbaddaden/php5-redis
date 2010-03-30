@@ -27,11 +27,11 @@ class TestRedis extends Test\Unit\TestCase
   function test_string_commands()
   {
     # get / set
-    $this->assert_equal($this->redis->get('mykey'), null);
+    $this->assert_null($this->redis->get('mykey'));
     $this->assert_true($this->redis->set('mykey', 'foobar'));
     $this->assert_equal($this->redis->get('mykey'), 'foobar');
     
-    $this->assert_equal($this->redis->get('other'), null);
+    $this->assert_null($this->redis->get('other'));
     $this->assert_true($this->redis->set('other', 'barfoo'));
     $this->assert_equal($this->redis->get('other'), 'barfoo');
     
@@ -210,7 +210,8 @@ class TestRedis extends Test\Unit\TestCase
     # hkeys / hvals / hgetall
     $this->assert_equal($this->redis->hkeys('profile:1'), array('name', 'login', 'password'));
     $this->assert_equal($this->redis->hvals('profile:1'), array('John Doe', 'john', 'doe'));
-    $this->assert_equal($this->redis->hgetall('profile:1'), array('name' => 'John Doe', 'login' => 'john', 'password' => 'doe'));
+    $this->assert_equal($this->redis->hgetall('profile:1'),
+      array('name' => 'John Doe', 'login' => 'john', 'password' => 'doe'));
     
     # hdel
     $this->assert_true($this->redis->hdel('profile:1', 'login'));

@@ -133,6 +133,8 @@ class Redis
     'lpop'         => array(self::CMD_INLINE),
     'rpop'         => array(self::CMD_INLINE),
     'rpoplpush'    => array(self::CMD_INLINE),
+    'blpop'        => array(self::CMD_INLINE),
+    'brpop'        => array(self::CMD_INLINE),
     
     # sets
     'sadd'         => array(self::CMD_BULK,      self::REP_BOOL),
@@ -173,6 +175,7 @@ class Redis
     'hvals'        => array(self::CMD_INLINE),
     'hgetall'      => array(self::CMD_INLINE,     self::REP_ASSOC),
     'hexists'      => array(self::CMD_BULK,       self::REP_BOOL),
+    'hincrby'      => array(self::CMD_MULTIBULK),
     
     # persistence
     'save'         => array(self::CMD_INLINE,    self::REP_OK),

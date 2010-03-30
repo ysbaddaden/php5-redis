@@ -216,6 +216,11 @@ class TestRedis extends Test\Unit\TestCase
     # hdel
     $this->assert_true($this->redis->hdel('profile:1', 'login'));
     $this->assert_false($this->redis->hexists('profile:1', 'login'));
+    
+    # hincrby
+    $this->assert_equal($this->redis->hincrby('profile:1', 'counter', 1), 1);
+    $this->assert_equal($this->redis->hincrby('profile:1', 'counter', 6), 7);
+    $this->assert_equal($this->redis->hincrby('profile:1', 'counter', -2), 5);
   }
   
   function test_pipeline()

@@ -181,17 +181,20 @@ class RedisCluster
   
   private function set_dispatched_reply(&$rs, $i, $cmd, $reply)
   {
-    if (!isset($rs[$i])) {
-      $rs[$i] = $reply;
-    }
-    elseif (is_bool($reply)) {
-      $rs[$i] = $rs[$i] and $reply;
-    }
-    elseif (is_int($reply)) {
-      $rs[$i] += $reply;
+    if (isset($rs[$i]))
+    {
+      if (is_bool($rs[$i])) {
+        $rs[$i] = $rs[$i] and $reply;
+      }
+      elseif (is_int($reply)) {
+        $rs[$i] += $reply;
+      }
+#      else {
+#        trigger_error("Skipping merge of this type '".gettype($rs[$i])."'.", E_USER_NOTICE);
+#      }
     }
     else {
-      trigger_error("Unknown reply type '".gettype($reply)."'.", E_USER_WARNING);
+      $rs[$i] = $reply;
     }
   }
   

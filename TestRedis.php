@@ -226,7 +226,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', 6), 7);
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', -2), 5);
   }
-  /*
+  
   function test_pipeline()
   {
     $this->assert_null($this->redis->pipeline(function() {}));
@@ -241,9 +241,9 @@ class TestRedis extends Test\Unit\TestCase
       $pipe->incr('key4');
       $pipe->decr('key5');
       $pipe->del('key1', 'key2');
-    }), array(true, true, false, 2, 3, 46, 1, -1, 2));
+    }), array('OK', 'OK', false, 2, 3, 46, 1, -1, 2));
   }
-  */
+  
   function test_server_commands()
   {
     # ping

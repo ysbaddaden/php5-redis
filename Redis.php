@@ -330,7 +330,6 @@ class Redis
   
   function send_command($commands)
   {
-    # format
     $cmd_str = array();
     $cmd     = array();
     foreach($commands as $i => $c)
@@ -340,10 +339,8 @@ class Redis
       $cmd_str[] = $this->format_command($cmd[$i], $args);
     }
     
-    # call
     $rs = $this->send_raw_command($cmd_str);
     
-    # reply(ies)
     $c = current($cmd);
     foreach($rs as $i => $r)
     {
@@ -361,7 +358,7 @@ class Redis
           $rs[$i] = $ary;
         break;
       }
-      $c = next($commands);
+      $c = next($cmd);
     }
     
     return (count($commands) == 1) ? $rs[0] : $rs;

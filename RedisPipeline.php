@@ -16,9 +16,7 @@ class RedisPipeline
   
   function execute()
   {
-    if (empty($this->commands)) {
-      return null;
-    }
+    if (empty($this->commands)) return null;
     return $this->redis->send_command($this->commands);
   }
   

@@ -195,6 +195,49 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->sunionstore('s1s2s3', 's1', 's2', 's3'), 3);
   }
   
+  function test_sorted_sets()
+  {
+    # zadd / zcard
+    $this->assert_true($this->redis->zadd('sorted_key', 1, 'a'));
+    $this->assert_true($this->redis->zadd('sorted_key', 2, 'b'));
+    $this->assert_false($this->redis->zadd('sorted_key', 3, 'b'));
+    $this->assert_equal($this->redis->zcard('sorted_key'), 2);
+    
+    # zrem
+    $this->assert_true($this->redis->zrem('sorted_key', 'b'));
+    $this->assert_false($this->redis->zrem('sorted_key', 'c'));
+    $this->assert_equal($this->redis->zcard('sorted_key'), 1);
+    
+    # zincrby
+    $this->redis->zadd('sorted_key', 1, 'a');
+    $this->redis->zadd('sorted_key', 2, 'b');
+    $this->assert_equal($this->redis->zincrby('sorted_key', 2, 'a'), 3.0);
+    
+    # zrange / zrevrange
+    $this->redis->zadd('sorted_key', 2, 'c');
+    $this->redis->zadd('sorted_key', 4, 'd');
+    $this->assert_equal($this->redis->zrange('sorted_key', 0, 1), array('b', 'c'));
+    $this->assert_equal($this->redis->zrange('sorted_key', 0, 3), array('b', 'c', 'a', 'd'));
+    $this->assert_equal($this->redis->zrange('sorted_key', 2, 10), array('a', 'd'));
+    $this->assert_equal($this->redis->zrevrange('sorted_key', 2, 10), array('c', 'b'));
+    
+    # zrangebyscore
+    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0), array('b', 'c'));
+    
+    # zrank / zrevrank / zscore
+    $this->assert_equal($this->redis->zrank('sorted_key', 'a'), 2);
+    $this->assert_equal($this->redis->zrevrank('sorted_key', 'a'), 1);
+    $this->assert_equal($this->redis->zscore('sorted_key', 'b'), 2.0);
+    
+    # zremrangebyscore
+    $this->assert_equal($this->redis->zremrangebyscore('sorted_key', 1.0, 2.0), 2);
+    $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('a', 'd'));
+    
+    # zremrangebyrank
+    $this->assert_equal($this->redis->zremrangebyrank('sorted_key', 0, 0), 1);
+    $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('d'));
+  }
+  
   function test_hashes()
   {
     # REDIS >= 1.3 only

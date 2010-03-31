@@ -159,17 +159,18 @@ class Client
     
     # zsets (sorted sets)
     'zadd'             => array(self::CMD_BULK,   self::REP_BOOL),
-    'zrem'             => array(self::CMD_INLINE, self::REP_BOOL),
-    'zincrby'          => array(self::CMD_INLINE),
+    'zrem'             => array(self::CMD_BULK,   self::REP_BOOL),
+    'zincrby'          => array(self::CMD_BULK,   self::REP_FLOAT),
     'zrange'           => array(self::CMD_INLINE, self::REP_ARRAY),
     'zrevrange'        => array(self::CMD_INLINE, self::REP_ARRAY),
     'zrangebyscore'    => array(self::CMD_INLINE, self::REP_ARRAY),
     'zcard'            => array(self::CMD_INLINE),
-    'zscore'           => array(self::CMD_INLINE, self::REP_FLOAT),
+    'zscore'           => array(self::CMD_BULK,   self::REP_FLOAT),
     'zremrangebyscore' => array(self::CMD_INLINE),
     'zremrangebyrank'  => array(self::CMD_INLINE),
-    'zrank'            => array(self::CMD_INLINE),
-    'zrevrank'         => array(self::CMD_INLINE),
+    'zrank'            => array(self::CMD_BULK),
+    'zrevrank'         => array(self::CMD_BULK),
+    'zcount'           => array(self::CMD_INLINE),
 #    'zunion'           => array(self::CMD_INLINE),
 #    'zinter'           => array(self::CMD_INLINE),
     
@@ -409,18 +410,18 @@ class Client
   {
     switch(fgetc($this->sock))
     {
-      case '+': return $this->read_single_line_reply();
-      case ':': return (int)$this->read_single_line_reply();
+      case '+': return $this->read_single_line_reply('+');
+      case ':': return (int)$this->read_single_line_reply(':');
       case '$': return $this->read_bulk_reply();
       case '*': return $this->read_multibulk_reply();
-      case '-': throw new Exception($this->read_single_line_reply(), self::ERR_REPLY);
+      case '-': throw new Exception($this->read_single_line_reply('-'), self::ERR_REPLY);
     }
   }
   
-  private function read_single_line_reply()
+  private function read_single_line_reply($c)
   {
     $line = rtrim(fgets($this->sock), "\r\n");
-    if ($this->debug) echo "< \"$line\"\n";
+    if ($this->debug) echo "< \"$c$line\"\n";
     return $line;
   }
   
@@ -430,7 +431,7 @@ class Client
     $len = (int)fgets($this->sock);
     if ($len == -1)
     {
-      if ($this->debug) echo "< NULL\n";
+      if ($this->debug) echo "< \$NULL\n";
       return null;
     }
     
@@ -440,7 +441,7 @@ class Client
     }
     fread($this->sock, 2);
     
-    if ($this->debug) echo "< \"$rs\"\n";
+    if ($this->debug) echo "< \"\$$rs\"\n";
     return $rs;
   }
   

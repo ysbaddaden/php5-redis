@@ -416,7 +416,7 @@ class Client
       case '-': throw new Exception($this->read_single_line_reply(), self::ERR_REPLY);
     }
   }
-  --
+  
   private function read_single_line_reply()
   {
     $line = rtrim(fgets($this->sock), "\r\n");

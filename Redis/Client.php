@@ -316,7 +316,8 @@ class Client
     switch($cmd['type'])
     {
       case self::CMD_INLINE:
-        return $this->format_inline_command($cmd['name'], $args).' '.$cmd['options'];
+        $str = $this->format_inline_command($cmd['name'], $args);
+        return empty($cmd['options']) ? $str : "$str {$cmd['options']}";
       
       case self::CMD_BULK:
         return $this->format_bulk_command($cmd['name'], $args);
@@ -466,7 +467,7 @@ class Client
     $len = (int)fgets($this->sock);
     if ($len == -1)
     {
-      if ($this->debug) echo "< \$NULL\n";
+      if ($this->debug) echo "< NULL\n";
       return null;
     }
     
@@ -488,8 +489,11 @@ class Client
     $ary = array();
     for ($i=0; $i<$rows; $i++)
     {
-      fgetc($this->sock);
-      $ary[] = $this->read_bulk_reply();
+      switch(fgetc($this->sock))
+      {
+        case '$': $ary[] = $this->read_bulk_reply(); break;
+        case ':': $ary[] = (int)$this->read_single_line_reply(':'); break;
+      }
     }
     return $ary;
   }

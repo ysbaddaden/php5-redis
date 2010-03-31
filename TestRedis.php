@@ -367,6 +367,34 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_ok($this->redis->flushdb());
     $this->assert_equal($this->redis->dbsize(), 0);
   }
+  
+  function test_publish_subscribe()
+  {
+    if (get_class($this) == 'TestRedis')
+    {
+      $this->assert_equal($this->redis->subscribe('mychat'), array('subscribe', 'mychat', 1));
+      
+      $pid = pcntl_fork();
+      if ($pid == -1) {
+        die("Cannot test pub/sub, unable to fork.");
+      }
+      elseif ($pid)
+      {
+        $this->assert_equal($this->redis->listen(), array('message', 'mychat', 'hello there'));
+        $this->assert_equal($this->redis->listen(), array('message', 'mychat', 'how are you?'));
+        pcntl_wait($status);
+      }
+      else
+      {
+        $r = new Redis\Client(array('db' => 0xF, 'port' => 6380));
+        $r->publish('mychat', 'hello there');
+        $r->publish('mychat', 'how are you?');
+        exit;
+      }
+      
+      $this->assert_equal($this->redis->unsubscribe(), array('unsubscribe', 'mychat', 0));
+    }
+  }
 }
 
 

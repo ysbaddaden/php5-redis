@@ -63,7 +63,6 @@ namespace Redis;
 # +array($field => $value)+.
 # 
 # TODO: Support SORT.
-# TODO: Support WITH SCORES in sorted sets.
 # TODO: Properly handle MULTI/EXEC.
 # TODO: listen() for PUB/SUB (reads from the socket, until there is a message).
 class Client
@@ -308,7 +307,7 @@ class Client
   {
     $bulk_data = array_pop($args);
     $cmd  = "$name ".implode(' ', $args).' ';
-    $cmd .= sprintf("%lu\r\n", strlen($bulk_data));
+    $cmd .= sprintf("%lu\r\n", mb_strlen($bulk_data, '8bit'));
     $cmd .= $bulk_data;
     return $cmd;
   }

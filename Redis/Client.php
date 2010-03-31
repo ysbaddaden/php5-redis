@@ -63,7 +63,6 @@ namespace Redis;
 # +array($field => $value)+.
 # 
 # TODO: Properly handle MULTI/EXEC.
-# TODO: Test Public/Subscribe.
 class Client
 {
   const ERR_CONNECT   = 1;

@@ -1,23 +1,27 @@
 = php5-redis
 
-Yet another pure PHP client class for Redis. Someday it might be ported to be
-a PHP extension, written in C or C++.
+Yet another PHP client class for Redis.
 
 == Features
 
 It's currently compatible with Redis 1.2.x and supports most Redis 1.3.x
-features. Except for MULTI/EXEC and PUB/SUB which aren't really supported yet.
+features (hashes, zrank, publish/subscribe), except for MULTI/EXEC which isn't
+supported yet.
 
 == Clusters
 
-Clusters are supported through the <tt>RedisCluster</tt> class, which is a
+I'm not sure this <tt>Redis\Cluster</tt> class is a good idea, since an official
+(and thus far better) +redis-cluster+ shall appear some time after Redis 2.0 is
+out.
+
+Clusters are supported through the <tt>Redis\Cluster</tt> class, which is a
 drop-in replacement for the <tt>Redis\Client</tt> class, except for a few
 limitations:
 
 - <tt>RedisCluster->pipeline()</tt> doesn't support +MGET+ and +MSETNX+,
   because it's too complicated to handle replies correctly.
 - +MSETNX+ is supported but requires that all the keys are on a single server,
-  since you can't ensure that all the keys or none are set, when keys are
+  since you can't ensure that all the keys -or none- are set when keys are
   sharded between servers.
 - +MULTI/EXEC+ won't work as expected. <tt>Redis\Cluster</tt> should remember
   the +MULTI+ command and send it whenever a new server is contacted.
@@ -28,7 +32,7 @@ Everything else is supported, even +MGET+ and +MSET+.
 
 == Extension
 
-Only the generic code has been written yet. Everything has yet to be done.
+Someday it might be ported to be a PHP extension, written in C or C++.
 
 == Author
 

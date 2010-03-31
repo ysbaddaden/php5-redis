@@ -376,7 +376,7 @@ class TestRedis extends Test\Unit\TestCase
       
       $pid = pcntl_fork();
       if ($pid == -1) {
-        die("Cannot test pub/sub, unable to fork.");
+        echo "WARNING: cannot test pub/sub, unable to fork...\n";
       }
       elseif ($pid)
       {

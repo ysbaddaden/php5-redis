@@ -5,8 +5,8 @@ a PHP extension, written in C or C++.
 
 == Features
 
-It's currently compatible with Redis 1.3.x and supports strings, hashes, lists,
-sets, sorted sets and pipelining. MULTI/EXEC isn't fully supported yet.
+It's currently compatible with Redis 1.2.x and supports most Redis 1.3.x
+features. Except for MULTI/EXEC and PUB/SUB which aren't really supported yet.
 
 == Clusters
 

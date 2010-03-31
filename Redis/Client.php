@@ -60,7 +60,7 @@ namespace Redis;
 # exist.
 # 
 # TODO: Properly handle MULTI/EXEC (QUEUED replies, EXEC with all replies and DISCARD).
-# TODO: Simplify handling of replies (return status replies like OK and 0/1 booleans as is).
+# TODO: listen() for PUB/SUB (reads from the socket, until there is a message).
 class Client
 {
   const ERR_CONNECT   = 1;
@@ -73,26 +73,23 @@ class Client
   const CMD_BULK      = 2;
   const CMD_MULTIBULK = 3;
   
-  const REP_OK        = '+OK';
-  const REP_STRING    = 2;
-  const REP_FLOAT     = 4;
-  const REP_BOOL      = 5;
+  const REP_FLOAT     = 1;
+  const REP_BOOL      = 2;
+  const REP_ARRAY     = 3;
+  const REP_ASSOC     = 4;
   const REP_QUEUED    = '+QUEUED';
-  const REP_PONG      = '+PONG';
-  const REP_ARRAY     = 8;
-  const REP_ASSOC     = 9;
   
   public  $debug = false;
   private $sock;
   
   private static $commands = array(
     # connection
-    'auth'         => array(self::CMD_INLINE,    self::REP_OK),
+    'auth'         => array(self::CMD_INLINE),
     
     # multi/exec (untested)
-    'multi'        => array(self::CMD_INLINE,    self::REP_OK),
+    'multi'        => array(self::CMD_INLINE),
     'exec'         => array(self::CMD_INLINE),
-    'discard'      => array(self::CMD_INLINE,    self::REP_OK),
+    'discard'      => array(self::CMD_INLINE),
     
     # generics
     'exists'       => array(self::CMD_INLINE,    self::REP_BOOL),
@@ -100,16 +97,16 @@ class Client
     'type'         => array(self::CMD_INLINE),
     'keys'         => array(self::CMD_INLINE),
     'randomkey'    => array(self::CMD_INLINE),
-    'rename'       => array(self::CMD_INLINE,    self::REP_OK),
+    'rename'       => array(self::CMD_INLINE),
     'renamenx'     => array(self::CMD_INLINE,    self::REP_BOOL),
     'dbsize'       => array(self::CMD_INLINE),
     'expire'       => array(self::CMD_INLINE,    self::REP_BOOL),
     'expireat'     => array(self::CMD_INLINE,    self::REP_BOOL),
     'ttl'          => array(self::CMD_INLINE),
-    'select'       => array(self::CMD_INLINE,    self::REP_OK),
+    'select'       => array(self::CMD_INLINE),
     'move'         => array(self::CMD_INLINE,    self::REP_BOOL),
-    'flushdb'      => array(self::CMD_INLINE,    self::REP_OK),
-    'flushall'     => array(self::CMD_INLINE,    self::REP_OK),
+    'flushdb'      => array(self::CMD_INLINE),
+    'flushall'     => array(self::CMD_INLINE),
     
     # strings
     'set'          => array(self::CMD_BULK),
@@ -129,9 +126,9 @@ class Client
     'rpush'        => array(self::CMD_BULK,      self::REP_BOOL),
     'llen'         => array(self::CMD_INLINE),
     'lrange'       => array(self::CMD_INLINE),
-    'ltrim'        => array(self::CMD_INLINE,    self::REP_OK),
+    'ltrim'        => array(self::CMD_INLINE),
     'lindex'       => array(self::CMD_INLINE),
-    'lset'         => array(self::CMD_BULK,      self::REP_OK),
+    'lset'         => array(self::CMD_BULK),
     'lrem'         => array(self::CMD_BULK),
     'lpop'         => array(self::CMD_INLINE),
     'rpop'         => array(self::CMD_INLINE),
@@ -186,9 +183,9 @@ class Client
     'hincrby'      => array(self::CMD_MULTIBULK),
     
     # persistence
-    'save'         => array(self::CMD_INLINE,    self::REP_OK),
-    'bgsave'       => array(self::CMD_INLINE,    self::REP_OK),
-    'bgrewriteaof' => array(self::CMD_INLINE,    self::REP_OK),
+    'save'         => array(self::CMD_INLINE),
+    'bgsave'       => array(self::CMD_INLINE),
+    'bgrewriteaof' => array(self::CMD_INLINE),
     'lastsave'     => array(self::CMD_INLINE),
     
     # pub/sub
@@ -198,10 +195,10 @@ class Client
     
     # server
     'config'       => array(self::CMD_BULK),
-    'ping'         => array(self::CMD_INLINE,    self::REP_PONG),
+    'ping'         => array(self::CMD_INLINE),
     'shutdown'     => array(self::CMD_INLINE),
     'info'         => array(self::CMD_INLINE),
-    'slaveof'      => array(self::CMD_INLINE,    self::REP_OK),
+    'slaveof'      => array(self::CMD_INLINE),
   );
   
   function __construct($config=null) {

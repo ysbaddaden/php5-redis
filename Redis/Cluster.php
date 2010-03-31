@@ -1,4 +1,5 @@
 <?php
+namespace Redis;
 
 # Shards keys within multiple Redis servers.
 # 
@@ -12,21 +13,21 @@
 # (whatever is before +:+), so that all +webcomic:*+ keys will be on the same
 # servers, while +chapters:*+ could be on another one:
 # 
-#   $redis = new RedisCluster(array($server1, $server2), function($key)
+#   $redis = new Redis\Cluster(array($server1, $server2), function($key)
 #   {
 #     $hkey = explode(':', $key, 2);
 #     return md5($hkey[0]);
 #   });
 # 
 # TODO: Proper MULTI/EXEC functionality across servers.
-class RedisCluster
+class Cluster
 {
   private $servers;
   private $hash_method;
   
   function __construct($configs=array(), $hash_method='md5', $debug=false)
   {
-    $this->servers     = new RedisServers($configs, $debug);
+    $this->servers     = new Servers($configs, $debug);
     $this->hash_method = $hash_method;
   }
   
@@ -81,7 +82,7 @@ class RedisCluster
   # Supports all commands, except for +MGET+ and +MSETNX+.
   function pipeline($closure)
   {
-    $pipe = new RedisPipeline($this);
+    $pipe = new Pipeline($this);
     $closure($pipe);
     
     $commands_by_server = $this->dispatch_commands_by_server($pipe->commands());
@@ -125,7 +126,7 @@ class RedisCluster
     }
     
     if ($nx and count($keys_by_server) > 1) {
-      throw new ErrorException("MSETNX cannot be sharded between servers. You must ensure all keys are on a single server.", 0, E_USER_WARNING);
+      throw new \ErrorException("MSETNX cannot be sharded between servers. You must ensure all keys are on a single server.", 0, E_USER_WARNING);
     }
     
     foreach($keys_by_server as $server => $args) {
@@ -168,7 +169,7 @@ class RedisCluster
         break;
         
         case 'mget': case 'msetnx':
-          trigger_error("RedisCluster->pipeline() doesn't support the {$cmd[0]} command.", E_USER_ERROR);
+          trigger_error("Redis\Cluster->pipeline() doesn't support the {$cmd[0]} command.", E_USER_ERROR);
         break;
         
         default:
@@ -215,7 +216,7 @@ class RedisCluster
   {
     if (count($this->servers) > 1)
     {
-      $cmd  = Redis::lookup_command($func);
+      $cmd  = Client::lookup_command($func);
       $hash = call_user_func($this->hash_method, $key);
       return $hash % count($this->servers);
     }

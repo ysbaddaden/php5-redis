@@ -1,4 +1,6 @@
 <?php
+namespace Redis;
+
 # Copyright (c) 2010 Julien Portalier <ysbaddaden@gmail.com>
 # Distributed as-is under the MIT license.
 
@@ -11,7 +13,7 @@
 # 
 # = Examples
 # 
-#   $r = new Redis();
+#   $r = new Redis\Client();
 #   
 #   $r->set('mykey', 'foobar');  # => true
 #   $r->get('mykey');            # => 'foobar'
@@ -30,7 +32,7 @@
 # == Errors
 # 
 # If the server returns an error, this class will throw a catchable
-# <tt>RedisException</tt> with the error message returned by the server.
+# <tt>Redis\Exception</tt> with the error message returned by the server.
 # 
 # == Status replies
 # 
@@ -39,7 +41,7 @@
 # is 'PONG'.
 # 
 # Please note that it will always return true and never false, since a
-# <tt>RedisException</tt> will be throwned when the result is an error.
+# <tt>Redis\Exception</tt> will be throwned when the result is an error.
 # 
 # == Integer replies
 # 
@@ -59,7 +61,7 @@
 # 
 # TODO: Properly handle MULTI/EXEC (QUEUED replies, EXEC with all replies and DISCARD).
 # TODO: Simplify handling of replies (return status replies like OK and 0/1 booleans as is).
-class Redis
+class Client
 {
   const ERR_CONNECT   = 1;
   const ERR_SOCKET    = 2;
@@ -221,15 +223,15 @@ class Redis
     
     if (($this->sock = fsockopen($host, $port, $errno, $errstr)) === false)
     {
-      throw new RedisException("Unable to connect to Redis server on $host:$port ".
-        "($errno $errstr).", Redis::ERR_CONNECT);
+      throw new Exception("Unable to connect to Redis server on $host:$port ".
+        "($errno $errstr).", self::ERR_CONNECT);
     }
     
     if (isset($this->config['password'])
       and !$this->auth($password))
     {
-      throw new RedisException("Unable to auth on Redis server: wrong password?",
-        Redis::ERR_AUTH);
+      throw new Exception("Unable to auth on Redis server: wrong password?",
+        self::ERR_AUTH);
     }
     
     if (isset($this->config['db'])) {
@@ -248,7 +250,7 @@ class Redis
   
   function pipeline($closure)
   {
-    $pipe = new RedisPipeline($this);
+    $pipe = new Pipeline($this);
     $closure($pipe);
     return $pipe->execute();
   }
@@ -383,7 +385,7 @@ class Redis
     if ($this->debug) echo "\n> \"$cmd_str\"\n";
     
     if (!fwrite($this->sock, "$cmd_str\r\n")) {
-      throw new RedisException("Cannot write to server socket.", Redis::ERR_SOCKET);
+      throw new Exception("Cannot write to server socket.", Client::ERR_SOCKET);
     }
     
     if (is_array($commands))
@@ -400,30 +402,6 @@ class Redis
     return $rs;
   }
   
-  /*
-  # :nodoc:
-  function read_reply($cmd)
-  {
-    $rs = $this->read_raw_reply();
-    
-    switch($cmd['reply'])
-    {
-      case null:             return $rs;
-      case self::REP_BOOL:   return (bool)$rs;
-      case self::REP_OK:     return ($rs == self::REP_OK);
-      case self::REP_FLOAT:  return (double)$rs;
-      case self::REP_PONG:   return ($rs == self::REP_PONG);
-      case self::REP_ARRAY:  return ($rs !== null) ? $rs : array();
-      case self::REP_ASSOC:
-        $ary = array();
-        for ($i=0; $i<count($rs); $i+=2) {
-          $ary[$rs[$i]] = $rs[$i+1];
-        }
-        return $ary;
-    }
-  }
-  */
-  
   private function read_raw_reply()
   {
     switch(fgetc($this->sock))
@@ -432,7 +410,7 @@ class Redis
       case ':': return (int)$this->read_single_line_reply();
       case '$': return $this->read_bulk_reply();
       case '*': return $this->read_multibulk_reply();
-      case '-': throw new RedisException($this->read_single_line_reply(), self::ERR_REPLY);
+      case '-': throw new Exception($this->read_single_line_reply(), self::ERR_REPLY);
     }
   }
   

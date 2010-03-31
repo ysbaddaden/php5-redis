@@ -1,7 +1,9 @@
 <?php
+namespace Redis;
 
-# Handles the list of servers for <tt>RedisCluster</tt>.
-class RedisServers implements Countable, ArrayAccess
+# Handles the list of servers for <tt>Redis\Cluster</tt>.
+# :nodoc:
+class Servers implements \Countable, \ArrayAccess
 {
   private $servers = array();
   private $configs;
@@ -39,7 +41,7 @@ class RedisServers implements Countable, ArrayAccess
       else {
         $config = $this->configs[$index];
       }
-      $this->servers[$index] = new Redis($config);
+      $this->servers[$index] = new Client($config);
       $this->servers[$index]->debug = $this->debug;
     }
     return $this->servers[$index];

@@ -7,7 +7,7 @@ class TestRedis extends Test\Unit\TestCase
   
   function setup()
   {
-    $this->redis = new Redis(array('db' => 0xF, 'port' => 6380));
+    $this->redis = new Redis\Client(array('db' => 0xF, 'port' => 6380));
     $this->redis->debug = in_array('-d', $_SERVER['argv']);
   }
   
@@ -17,9 +17,9 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_connect_errors()
   {
-    $this->assert_throws('RedisException', function()
+    $this->assert_throws('Redis\Exception', function()
     {
-      $r = new Redis(array('host' => 'localhost', 'port' => '1234567890'));
+      $r = new Redis\Client(array('host' => 'localhost', 'port' => '1234567890'));
       @$r->connect();
     }, 'Redis::ERR_CONNECT');
   }
@@ -198,7 +198,7 @@ class TestRedis extends Test\Unit\TestCase
   function test_hashes()
   {
     # REDIS >= 1.3 only
-    try { $this->redis->hlen('profile:1'); } catch(RedisException $e) { return; }
+    try { $this->redis->hlen('profile:1'); } catch(Redis\Exception $e) { return; }
     
     # hexists / hset / hlen
     $this->assert_false($this->redis->hexists('profile:1', 'name'));
@@ -265,7 +265,7 @@ class TestRedisCluster extends TestRedis
     $server2 = array('db' => 0xF, 'port' => 6381);
     $debug   = in_array('-d', $_SERVER['argv']);
     
-    $this->redis = new RedisCluster(array($server1, $server2), function($key) {
+    $this->redis = new Redis\Cluster(array($server1, $server2), function($key) {
       return ($key == 'keyA' or $key == 'key2' or $key == 'key7') ? 1 : 0;
     }, $debug);
   }

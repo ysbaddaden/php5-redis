@@ -1,7 +1,8 @@
 <?php
+namespace Redis;
 
 # :nodoc:
-class RedisPipeline
+class Pipeline
 {
   private $redis;
   private $commands = array();

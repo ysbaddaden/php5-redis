@@ -304,7 +304,6 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_sort()
   {
-    # fixture data
     $this->redis->set('webcomic:1:title', 'deo');
     $this->redis->set('webcomic:1:created_at', '2007-02-01');
     $this->redis->rpush('webcomics', 1);
@@ -321,7 +320,6 @@ class TestRedis extends Test\Unit\TestCase
     $this->redis->set('webcomic:4:created_at', '2009-07-12');
     $this->redis->rpush('webcomics', 4);
     
-    # test
     $this->assert_equal($this->redis->sort("webcomics"), array(1, 2, 3, 4));
     $this->assert_equal($this->redis->sort("webcomics desc"), array(4, 3, 2, 1));
     $this->assert_equal($this->redis->sort("webcomics limit 0 3"), array(1, 2, 3));
@@ -338,6 +336,8 @@ class TestRedis extends Test\Unit\TestCase
     
     $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at get # get webcomic:*:title get webcomic:*:created_at"),
       array(array(1, 'deo', '2007-02-01'), array(3, 'jim', '2008-05-27'), array(4, 'tyler', '2009-07-12'), array(2, 'gordo', '2010-03-05')));
+    
+    $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at STORE webcomics:idx:created_at"), 4);
   }
   
   function test_pipeline()

@@ -213,7 +213,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->redis->zadd('sorted_key', 2, 'b');
     $this->assert_equal($this->redis->zincrby('sorted_key', 2, 'a'), 3.0);
     
-    # zrange / zrevrange
+    # z(rev)range
     $this->redis->zadd('sorted_key', 2, 'c');
     $this->redis->zadd('sorted_key', 4, 'd');
     $this->assert_equal($this->redis->zrange('sorted_key', 0, 1), array('b', 'c'));
@@ -221,10 +221,17 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->zrange('sorted_key', 2, 10), array('a', 'd'));
     $this->assert_equal($this->redis->zrevrange('sorted_key', 2, 10), array('c', 'b'));
     
+    # z(rev)range withscores
+    $this->assert_equal($this->redis->zrange_withscores('sorted_key', 1.0, 2.0), array('c' => 2.0, 'a' => 3.0));
+    $this->assert_equal($this->redis->zrevrange_withscores('sorted_key', 2, 10), array('c' => 2.0, 'b' => 2.0));
+    
     # zrangebyscore
     $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0), array('b', 'c'));
+    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0, 'LIMIT 0 1'), array('b'));
+    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 2, 10, 'LIMIT 2 2'), array('a', 'd'));
+    $this->assert_equal($this->redis->zrangebyscore_withscores('sorted_key', 2, 10, 'LIMIT 2 2'), array('a' => 3.0, 'd' => 4.0));
     
-    # zrank / zrevrank / zscore
+    # z(rev)rank / zscore
     $this->assert_equal($this->redis->zrank('sorted_key', 'a'), 2);
     $this->assert_equal($this->redis->zrevrank('sorted_key', 'a'), 1);
     $this->assert_equal($this->redis->zscore('sorted_key', 'b'), 2.0);

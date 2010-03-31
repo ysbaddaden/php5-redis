@@ -158,21 +158,24 @@ class Client
     'srandmember'  => array(self::CMD_INLINE),
     
     # zsets (sorted sets)
-    'zadd'             => array(self::CMD_BULK,   self::REP_BOOL),
-    'zrem'             => array(self::CMD_BULK,   self::REP_BOOL),
-    'zincrby'          => array(self::CMD_BULK,   self::REP_FLOAT),
-    'zrange'           => array(self::CMD_INLINE, self::REP_ARRAY),
-    'zrevrange'        => array(self::CMD_INLINE, self::REP_ARRAY),
-    'zrangebyscore'    => array(self::CMD_INLINE, self::REP_ARRAY),
-    'zcard'            => array(self::CMD_INLINE),
-    'zscore'           => array(self::CMD_BULK,   self::REP_FLOAT),
-    'zremrangebyscore' => array(self::CMD_INLINE),
-    'zremrangebyrank'  => array(self::CMD_INLINE),
-    'zrank'            => array(self::CMD_BULK),
-    'zrevrank'         => array(self::CMD_BULK),
-    'zcount'           => array(self::CMD_INLINE),
-#    'zunion'           => array(self::CMD_INLINE),
-#    'zinter'           => array(self::CMD_INLINE),
+    'zadd'                     => array(self::CMD_BULK,   self::REP_BOOL),
+    'zrem'                     => array(self::CMD_BULK,   self::REP_BOOL),
+    'zincrby'                  => array(self::CMD_BULK,   self::REP_FLOAT),
+    'zrange'                   => array(self::CMD_INLINE, self::REP_ARRAY),
+    'zrevrange'                => array(self::CMD_INLINE, self::REP_ARRAY),
+    'zrangebyscore'            => array(self::CMD_INLINE, self::REP_ARRAY),
+    'zrange_withscores'        => array(self::CMD_INLINE, self::REP_ASSOC, 'zrange',        'withscores'),
+    'zrevrange_withscores'     => array(self::CMD_INLINE, self::REP_ASSOC, 'zrevrange',     'withscores'),
+    'zrangebyscore_withscores' => array(self::CMD_INLINE, self::REP_ASSOC, 'zrangebyscore', 'withscores'),
+    'zcard'                    => array(self::CMD_INLINE),
+    'zscore'                   => array(self::CMD_BULK,   self::REP_FLOAT),
+    'zremrangebyscore'         => array(self::CMD_INLINE),
+    'zremrangebyrank'          => array(self::CMD_INLINE),
+    'zrank'                    => array(self::CMD_BULK),
+    'zrevrank'                 => array(self::CMD_BULK),
+    'zcount'                   => array(self::CMD_INLINE),
+#    'zunion'                   => array(self::CMD_INLINE),
+#    'zinter'                   => array(self::CMD_INLINE),
     
     # sorting
     'sort'         => array(self::CMD_INLINE),
@@ -265,9 +268,10 @@ class Client
       self::$commands[$name] : array(self::CMD_MULTIBULK);
     
     return array(
-      'name'  => $name,
-      'type'  => $cmd[0],
-      'reply' => isset($cmd[1]) ? $cmd[1] : null,
+      'name'    => isset($cmd[2]) ? $cmd[2] : $name,
+      'type'    => $cmd[0],
+      'reply'   => isset($cmd[1]) ? $cmd[1] : null,
+      'options' => isset($cmd[3]) ? $cmd[3] : '',
     );
   }
   
@@ -281,7 +285,7 @@ class Client
     switch($cmd['type'])
     {
       case self::CMD_INLINE:
-        return $this->format_inline_command($cmd['name'], $args);
+        return $this->format_inline_command($cmd['name'], $args).' '.$cmd['options'];
       
       case self::CMD_BULK:
         return $this->format_bulk_command($cmd['name'], $args);

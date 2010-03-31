@@ -387,8 +387,8 @@ class TestRedis extends Test\Unit\TestCase
       else
       {
         $r = new Redis\Client(array('db' => 0xF, 'port' => 6380));
-        $r->publish('mychat', 'hello there');
-        $r->publish('mychat', 'how are you?');
+        $this->assert_equal($r->publish('mychat', 'hello there'), 1);
+        $this->assert_equal($r->publish('mychat', 'how are you?'), 1);
         exit;
       }
       

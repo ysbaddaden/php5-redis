@@ -58,6 +58,7 @@
 # exist.
 # 
 # TODO: Properly handle MULTI/EXEC (QUEUED replies, EXEC with all replies and DISCARD).
+# TODO: Simplify handling of replies (return status replies like OK and 0/1 booleans as is).
 class Redis
 {
   const ERR_CONNECT   = 1;
@@ -109,12 +110,12 @@ class Redis
     'flushall'     => array(self::CMD_INLINE,    self::REP_OK),
     
     # strings
-    'set'          => array(self::CMD_BULK,      self::REP_OK),
+    'set'          => array(self::CMD_BULK),
     'get'          => array(self::CMD_INLINE),
     'getset'       => array(self::CMD_BULK),
     'setnx'        => array(self::CMD_BULK,      self::REP_BOOL),
     'mget'         => array(self::CMD_INLINE),
-    'mset'         => array(self::CMD_MULTIBULK, self::REP_OK),
+    'mset'         => array(self::CMD_MULTIBULK),
     'msetnx'       => array(self::CMD_MULTIBULK, self::REP_BOOL),
     'incr'         => array(self::CMD_INLINE),
     'incrby'       => array(self::CMD_INLINE),
@@ -340,30 +341,69 @@ class Redis
     }
     
     # call
-    $cmd_str = implode("\r\n", $cmd_str);
-    $this->send_raw_command($cmd_str);
+    $rs = $this->send_raw_command($cmd_str);
     
-    #reply
-    $rs = array();
-    foreach($cmd as $c) {
-      $rs[] = $this->read_reply($c);
+    # reply(ies)
+    $c = current($cmd);
+    foreach($rs as $i => $r)
+    {
+      switch($c['reply'])
+      {
+        case self::REP_BOOL:  $rs[$i] = (bool)$r;  break;
+        case self::REP_FLOAT: $rs[$i] = (float)$r; break;
+        case self::REP_ARRAY: $rs[$i] = ($r !== null) ? $r : array(); break;
+        
+        case self::REP_ASSOC:
+          $ary = array();
+          for ($j=0; $j<count($r); $j+=2) {
+            $ary[$r[$j]] = $r[$j+1];
+          }
+          $rs[$i] = $ary;
+        break;
+      }
+      $c = next($commands);
     }
+    
     return (count($commands) == 1) ? $rs[0] : $rs;
   }
   
-  private function send_raw_command($cmd)
+  # Sends a command (string) or a list of commands (array of strings).
+  # 
+  # Of course replies will be raw, which means that the following commands,
+  # for instance, will not return the same data:
+  # 
+  #   $r->hgetall('hash_key');
+  #   # => array('field1' => 'value1', 'field2' => 'value2')
+  #   
+  #   $r->send_raw_command('HGETALL hash_key');
+  #   # => array('field1', 'value1', 'field2', 'value2')
+  function send_raw_command($commands)
   {
-    if ($this->debug) echo "\n> \"$cmd\"\n";
+    if ($this->sock === null) $this->connect();
     
-    if ($this->sock === null) {
-      $this->connect();
-    }
+    $cmd_str = is_array($commands) ? implode("\r\n", $commands) : $commands;
     
-    if (!fwrite($this->sock, "$cmd\r\n")) {
+    if ($this->debug) echo "\n> \"$cmd_str\"\n";
+    
+    if (!fwrite($this->sock, "$cmd_str\r\n")) {
       throw new RedisException("Cannot write to server socket.", Redis::ERR_SOCKET);
     }
+    
+    if (is_array($commands))
+    {
+      $rs = array();
+      $i  = count($commands);
+      while($i--) {
+        $rs[] = $this->read_raw_reply();
+      }
+    }
+    else {
+      $rs = $this->read_raw_reply();
+    }
+    return $rs;
   }
   
+  /*
   # :nodoc:
   function read_reply($cmd)
   {
@@ -385,12 +425,13 @@ class Redis
         return $ary;
     }
   }
+  */
   
   private function read_raw_reply()
   {
     switch(fgetc($this->sock))
     {
-      case '+': return '+'.$this->read_single_line_reply();
+      case '+': return $this->read_single_line_reply();
       case ':': return (int)$this->read_single_line_reply();
       case '$': return $this->read_bulk_reply();
       case '*': return $this->read_multibulk_reply();

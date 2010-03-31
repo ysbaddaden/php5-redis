@@ -128,11 +128,10 @@ class RedisCluster
       throw new ErrorException("MSETNX cannot be sharded between servers. You must ensure all keys are on a single server.", 0, E_USER_WARNING);
     }
     
-    $rs = true;
     foreach($keys_by_server as $server => $args) {
-      $rs = $rs && !!$this->send_command($server, $cmd, array($args));
+      $this->send_command($server, $cmd, array($args));
     }
-    return $rs;
+    return 'OK';
   }
   
   # Dispatches commands by server (keeping the index for merging the replies correctly).

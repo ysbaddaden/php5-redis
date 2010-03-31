@@ -24,23 +24,27 @@ class TestRedis extends Test\Unit\TestCase
     }, 'Redis::ERR_CONNECT');
   }
   
+  protected function assert_ok($test) {
+    $this->assert_equal($test, 'OK');
+  }
+  
   function test_string_commands()
   {
     # get / set
     $this->assert_null($this->redis->get('mykey'));
-    $this->assert_true($this->redis->set('mykey', 'foobar'));
+    $this->assert_ok($this->redis->set('mykey', 'foobar'));
     $this->assert_equal($this->redis->get('mykey'), 'foobar');
     
     $this->assert_null($this->redis->get('other'));
-    $this->assert_true($this->redis->set('other', 'barfoo'));
+    $this->assert_ok($this->redis->set('other', 'barfoo'));
     $this->assert_equal($this->redis->get('other'), 'barfoo');
     
     # mget / mset
     $this->assert_equal($this->redis->mget('keyA', 'keyB'), array(null, null));
-    $this->assert_true($this->redis->set('keyA', 'foobar'));
+    $this->assert_ok($this->redis->set('keyA', 'foobar'));
     $this->assert_equal($this->redis->mget('keyA', 'keyB'), array('foobar', null));
     
-    $this->assert_true($this->redis->mset(array('keyA' => 'blabla', 'keyB' => 'foobar')));
+    $this->assert_ok($this->redis->mset(array('keyA' => 'blabla', 'keyB' => 'foobar')));
     $this->assert_equal($this->redis->mget(array('keyA', 'keyB')), array('blabla', 'foobar'));
     
     # setnx
@@ -92,7 +96,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->lrange('mylist', 2, 1), array());
     
     # ltrim
-    $this->assert_true($this->redis->ltrim('mylist', 0, 1));
+    $this->assert_ok($this->redis->ltrim('mylist', 0, 1));
     $this->assert_equal($this->redis->lrange('mylist', 0, 2), array('c', 'a'));
     
     # lindex
@@ -100,7 +104,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->lindex('mylist', 1), 'a');
     
     # lset
-    $this->assert_true($this->redis->lset('mylist', 0, 'g'));
+    $this->assert_ok($this->redis->lset('mylist', 0, 'g'));
     $this->assert_equal($this->redis->lindex('mylist', 0), 'g');
     
     # lrem
@@ -222,7 +226,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', 6), 7);
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', -2), 5);
   }
-  
+  /*
   function test_pipeline()
   {
     $this->assert_null($this->redis->pipeline(function() {}));
@@ -239,18 +243,19 @@ class TestRedis extends Test\Unit\TestCase
       $pipe->del('key1', 'key2');
     }), array(true, true, false, 2, 3, 46, 1, -1, 2));
   }
-  
+  */
   function test_server_commands()
   {
     # ping
-    $this->assert_true($this->redis->ping());
+    $this->assert_equal($this->redis->ping(), 'PONG');
     
     # flushdb / dbsize
     $this->assert_not_equal($this->redis->dbsize(), 0);
-    $this->assert_true($this->redis->flushdb());
+    $this->assert_ok($this->redis->flushdb());
     $this->assert_equal($this->redis->dbsize(), 0);
   }
 }
+
 
 class TestRedisCluster extends TestRedis
 {
@@ -273,8 +278,8 @@ class TestRedisCluster extends TestRedis
   
   function test_server_commands()
   {
-    $this->assert_true($this->redis->send_command(0, 'ping'));
-    $this->assert_true($this->redis->send_command(1, 'ping'));
+    $this->assert_equal($this->redis->send_command(0, 'ping'), 'PONG');
+    $this->assert_equal($this->redis->send_command(1, 'ping'), 'PONG');
   }
   
   function test_del_command()

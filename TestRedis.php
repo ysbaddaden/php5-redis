@@ -229,6 +229,10 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->zrevrank('sorted_key', 'a'), 1);
     $this->assert_equal($this->redis->zscore('sorted_key', 'b'), 2.0);
     
+    # zcount
+    $this->assert_equal($this->redis->zcount('sorted_key', 2, 2), 2);
+    $this->assert_equal($this->redis->zcount('sorted_key', 2.5, 3.0), 1);
+    
     # zremrangebyscore
     $this->assert_equal($this->redis->zremrangebyscore('sorted_key', 1.0, 2.0), 2);
     $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('a', 'd'));

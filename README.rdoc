@@ -11,16 +11,17 @@ features. Except for MULTI/EXEC and PUB/SUB which aren't really supported yet.
 == Clusters
 
 Clusters are supported through the <tt>RedisCluster</tt> class, which is a
-drop-in replacement for the <tt>Redis</tt> class, except for a few limitations:
+drop-in replacement for the <tt>Redis\Client</tt> class, except for a few
+limitations:
 
-- <tt>RedisCluster->pipeline()</tt> doesn't support +MGET+ and +MSETNX+, because
-  its too complicated to handle the replies.
+- <tt>RedisCluster->pipeline()</tt> doesn't support +MGET+ and +MSETNX+,
+  because it's too complicated to handle replies correctly.
 - +MSETNX+ is supported but requires that all the keys are on a single server,
   since you can't ensure that all the keys or none are set, when keys are
   sharded between servers.
-- +MULTI/EXEC+ won't work as expected. <tt>RedisCluster</tt> should remember
-  the +MULTI+ command and send it whenever a command is sent to a new server.
-  Contacted servers must be remembered too, in order for +EXEC+ and +DISCARD+
+- +MULTI/EXEC+ won't work as expected. <tt>Redis\Cluster</tt> should remember
+  the +MULTI+ command and send it whenever a new server is contacted.
+  Contacted servers should be remembered too, in order for +EXEC+ and +DISCARD+
   to work.
 
 Everything else is supported, even +MGET+ and +MSET+.

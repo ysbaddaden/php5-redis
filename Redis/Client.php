@@ -8,23 +8,23 @@ namespace Redis;
 # 
 # = Commands
 # 
-# See http://code.google.com/redis for the full list of commands
-# and their documentation.
+# See http://code.google.com/redis for the full list of commands and their
+# documentation.
 # 
 # = Examples
 # 
 #   $r = new Redis\Client();
 #   
-#   $r->set('mykey', 'foobar');  # => true
+#   $r->set('mykey', 'foobar');  # => 'OK'
 #   $r->get('mykey');            # => 'foobar'
-#   $r->setnx('mykey', 'foo');   # => false (mykey is already defined)
+#   $r->setnx('mykey', 'foo');   # => false
 #   $r->getset('mykey', 'foo');  # => 'foobar'
 #   
 #   $r->incr('counter');         # => 1
 #   $r->incrby('counter', 3);    # => 4
 #   $r->decr('counter');         # => 3
 #   
-#   $r->del('counter');          # => true
+#   $r->del('counter');          # => 1
 #   $r->get('counter');          # => null
 # 
 # = Replies
@@ -34,32 +34,37 @@ namespace Redis;
 # If the server returns an error, this class will throw a catchable
 # <tt>Redis\Exception</tt> with the error message returned by the server.
 # 
-# == Status replies
+# == Status codes
 # 
-# +Redis+ returns a bool if the status corresponds to what the command expects.
-# For instance +ping()+ awaits +'PONG'+ and will return true if the status reply
-# is 'PONG'.
+# Status replies (eg: +OK+, +PONG+) are returned as is, and will always return
+# that. If a command fails a <tt>Redis\Exception</tt> will be thrown.
 # 
-# Please note that it will always return true and never false, since a
-# <tt>Redis\Exception</tt> will be throwned when the result is an error.
+# == Strings
 # 
-# == Integer replies
+# Methods like +get()+ will return a string, if the key is declared as is
+# otherwise it might be +null+ (no such key), or an integer.
+# 
+# == Integers
 # 
 # This class returns a PHP integer when the Redis server says the value is one.
-# Except when a command returns only 0 or 1 integers, which are to be
-# interpreted as booleans, this class then returns a boolean.
 # 
-# == String replies
+# Some commands will only return +0+ and +1+ which means +false+ and +true+.
+# In this case, the command will return a boolean.
 # 
-# Methods like +get()+ will return a string if the key is declared as is.
-# 
-# == Array replies
+# == Arrays
 # 
 # Methods like +mget()+ will always return an array, containing either strings
 # or integers depending on the type of the keys, or nulls if a key doesn't
 # exist.
 # 
-# TODO: Properly handle MULTI/EXEC (QUEUED replies, EXEC with all replies and DISCARD).
+# == Associative arrays
+# 
+# Methods like +hgetall()+ will return an associative array in the form
+# +array($field => $value)+.
+# 
+# TODO: Support SORT.
+# TODO: Support WITH SCORES in sorted sets.
+# TODO: Properly handle MULTI/EXEC.
 # TODO: listen() for PUB/SUB (reads from the socket, until there is a message).
 class Client
 {
@@ -156,9 +161,9 @@ class Client
     'zadd'             => array(self::CMD_BULK,   self::REP_BOOL),
     'zrem'             => array(self::CMD_INLINE, self::REP_BOOL),
     'zincrby'          => array(self::CMD_INLINE),
-    'zrange'           => array(self::CMD_INLINE),
-    'zrevrange'        => array(self::CMD_INLINE),
-    'zrangebyscore'    => array(self::CMD_INLINE),
+    'zrange'           => array(self::CMD_INLINE, self::REP_ARRAY),
+    'zrevrange'        => array(self::CMD_INLINE, self::REP_ARRAY),
+    'zrangebyscore'    => array(self::CMD_INLINE, self::REP_ARRAY),
     'zcard'            => array(self::CMD_INLINE),
     'zscore'           => array(self::CMD_INLINE, self::REP_FLOAT),
     'zremrangebyscore' => array(self::CMD_INLINE),
@@ -215,8 +220,8 @@ class Client
   
   function connect()
   {
-    $host = isset($this->config['host'])     ? $this->config['host']     : 'localhost';
-    $port = isset($this->config['port'])     ? $this->config['port']     : '6379';
+    $host = isset($this->config['host']) ? $this->config['host'] : 'localhost';
+    $port = isset($this->config['port']) ? $this->config['port'] : '6379';
     
     if (($this->sock = fsockopen($host, $port, $errno, $errstr)) === false)
     {
@@ -225,7 +230,7 @@ class Client
     }
     
     if (isset($this->config['password'])
-      and !$this->auth($password))
+      and $this->auth($password) !== 'OK')
     {
       throw new Exception("Unable to auth on Redis server: wrong password?",
         self::ERR_AUTH);
@@ -240,7 +245,7 @@ class Client
   {
     if ($this->sock)
     {
-      $this->send_raw_command('quit');
+      fclose($this->sock);
       $this->sock = null;
     }
   }
@@ -327,6 +332,7 @@ class Client
     return $cmd;
   }
   
+  # :nodoc:
   function send_command($commands)
   {
     $cmd_str = array();
@@ -410,7 +416,7 @@ class Client
       case '-': throw new Exception($this->read_single_line_reply(), self::ERR_REPLY);
     }
   }
-  
+  --
   private function read_single_line_reply()
   {
     $line = rtrim(fgets($this->sock), "\r\n");
@@ -418,6 +424,7 @@ class Client
     return $line;
   }
   
+  # Gets the bulk response (and discards the last CRLF).
   private function read_bulk_reply()
   {
     $len = (int)fgets($this->sock);
@@ -427,7 +434,6 @@ class Client
       return null;
     }
     
-    # gets the bulk response (and discards the last CRLF)
     $rs  = '';
     while(strlen($rs) < $len) {
       $rs .= fread($this->sock, $len);

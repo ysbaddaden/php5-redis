@@ -5,13 +5,13 @@ namespace Redis;
 # 
 # =Key Hashing
 # 
-# For commands like SORT to work, all matching keys are expected to be in a
+# For commands like +SORT+ to work, all matching keys are expected to be in a
 # single Redis server. For assigning the same type of keys to the same server
 # you must specify your own hashing method.
 # 
 # For instance the following method will only encode the begining of the key
 # (whatever is before +:+), so that all +webcomic:*+ keys will be on the same
-# servers, while +chapters:*+ could be on another one:
+# server, while +chapters:*+ could be on another one:
 # 
 #   $redis = new Redis\Cluster(array($server1, $server2), function($key)
 #   {

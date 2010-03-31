@@ -62,7 +62,6 @@ namespace Redis;
 # Methods like +hgetall()+ will return an associative array in the form
 # +array($field => $value)+.
 # 
-# TODO: Support SORT.
 # TODO: Properly handle MULTI/EXEC.
 # TODO: Test Public/Subscribe.
 class Client

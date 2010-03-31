@@ -266,7 +266,7 @@ class Client
   }
   
   # :nodoc:
-  function lookup_command($name)
+  static function lookup_command($name)
   {
     $cmd = isset(self::$commands[$name]) ?
       self::$commands[$name] : array(self::CMD_MULTIBULK);
@@ -279,8 +279,7 @@ class Client
     );
   }
   
-  # :nodoc:
-  function format_command($cmd, $args)
+  private function format_command($cmd, $args)
   {
     if (isset($args[0]) and is_array($args[0])) {
       $args = $args[0];

@@ -64,7 +64,7 @@ namespace Redis;
 # 
 # TODO: Support SORT.
 # TODO: Properly handle MULTI/EXEC.
-# TODO: listen() for PUB/SUB (reads from the socket, until there is a message).
+# TODO: Test Public/Subscribe.
 class Client
 {
   const ERR_CONNECT   = 1;
@@ -258,6 +258,11 @@ class Client
     $pipe = new Pipeline($this);
     $closure($pipe);
     return $pipe->execute();
+  }
+  
+  # PUB/SUB: reads from the socket until there is a message.
+  function listen() {
+    return $this->read_raw_reply();
   }
   
   # :nodoc:

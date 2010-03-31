@@ -11,6 +11,18 @@ class TestRedis extends Test\Unit\TestCase
     $this->redis->debug = in_array('-d', $_SERVER['argv']);
   }
   
+  function is_redis13()
+  {
+    try
+    {
+      $this->redis->hlen('profile:1');
+      return true;
+    }
+    catch(Redis\Exception $e) {
+      return false;
+    }
+  }
+  
   function teardown() {
     $this->redis->flushdb();
   }
@@ -229,30 +241,38 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0), array('b', 'c'));
     $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0, 'LIMIT 0 1'), array('b'));
     $this->assert_equal($this->redis->zrangebyscore('sorted_key', 2, 10, 'LIMIT 2 2'), array('a', 'd'));
-    $this->assert_equal($this->redis->zrangebyscore_withscores('sorted_key', 2, 10, 'LIMIT 2 2'), array('a' => 3.0, 'd' => 4.0));
     
-    # z(rev)rank / zscore
-    $this->assert_equal($this->redis->zrank('sorted_key', 'a'), 2);
-    $this->assert_equal($this->redis->zrevrank('sorted_key', 'a'), 1);
+    if ($this->is_redis13())
+    {
+      $this->assert_equal($this->redis->zrangebyscore_withscores('sorted_key', 2, 10, 'LIMIT 2 2'), array('a' => 3.0, 'd' => 4.0));
+      
+      # z(rev)rank
+      $this->assert_equal($this->redis->zrank('sorted_key', 'a'), 2);
+      $this->assert_equal($this->redis->zrevrank('sorted_key', 'a'), 1);
+      
+      # zcount
+      $this->assert_equal($this->redis->zcount('sorted_key', 2, 2), 2);
+      $this->assert_equal($this->redis->zcount('sorted_key', 2.5, 3.0), 1);
+    }
+    
+    # zscore
     $this->assert_equal($this->redis->zscore('sorted_key', 'b'), 2.0);
-    
-    # zcount
-    $this->assert_equal($this->redis->zcount('sorted_key', 2, 2), 2);
-    $this->assert_equal($this->redis->zcount('sorted_key', 2.5, 3.0), 1);
     
     # zremrangebyscore
     $this->assert_equal($this->redis->zremrangebyscore('sorted_key', 1.0, 2.0), 2);
     $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('a', 'd'));
     
-    # zremrangebyrank
-    $this->assert_equal($this->redis->zremrangebyrank('sorted_key', 0, 0), 1);
-    $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('d'));
+    if ($this->is_redis13())
+    {
+      # zremrangebyrank
+      $this->assert_equal($this->redis->zremrangebyrank('sorted_key', 0, 0), 1);
+      $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('d'));
+    }
   }
   
   function test_hashes()
   {
-    # REDIS >= 1.3 only
-    try { $this->redis->hlen('profile:1'); } catch(Redis\Exception $e) { return; }
+    if (!$this->is_redis13()) return;
     
     # hexists / hset / hlen
     $this->assert_false($this->redis->hexists('profile:1', 'name'));

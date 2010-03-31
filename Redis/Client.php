@@ -253,6 +253,35 @@ class Client
     }
   }
   
+  # Returns an array of integers/strings if getting only one field.
+  # Returns an array of arrays (of integers/strings) when getting multiple fields.
+  # 
+  # For instance:
+  # 
+  #   $r->sort('stories get # get story:*:title get story:*:summary');
+  function sort()
+  {
+    $args = func_get_args();
+    $rs   = $this->send_command(array(array('sort', $args)));
+    
+    $count = substr_count(strtoupper(implode(' ', $args)), ' GET ');
+    if ($count > 1)
+    {
+      $ary = array();
+      for($i=0; $i<count($rs); $i+=$j)
+      {
+        $a = array();
+        for($j=0; $j<$count; $j++) {
+          $a[] = $rs[$i+$j];
+        }
+        $ary[] = $a;
+      }
+      return $ary;
+    }
+    
+    return $rs;
+  }
+  
   function pipeline($closure)
   {
     $pipe = new Pipeline($this);

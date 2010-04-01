@@ -490,8 +490,9 @@ class Client
     {
       switch(fgetc($this->sock))
       {
-        case '$': $ary[] = $this->read_bulk_reply(); break;
+        case '$': $ary[] = $this->read_bulk_reply();                break;
         case ':': $ary[] = (int)$this->read_single_line_reply(':'); break;
+        case '+': $ary[] = $this->read_single_line_reply('+');      break;
       }
     }
     return $ary;

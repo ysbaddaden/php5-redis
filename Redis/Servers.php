@@ -1,4 +1,7 @@
 <?php
+# Copyright (c) 2010 Julien Portalier <ysbaddaden@gmail.com>
+# Distributed as-is under the MIT license.
+
 namespace Redis;
 
 # Handles the list of servers for <tt>Redis\Cluster</tt>.

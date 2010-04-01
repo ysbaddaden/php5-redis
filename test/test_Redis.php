@@ -1,5 +1,5 @@
 <?php
-require_once 'Test/Unit.php';
+require_once __DIR__.'/unit.php';
 
 class TestRedis extends Test\Unit\TestCase
 {

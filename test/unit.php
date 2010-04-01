@@ -1,4 +1,10 @@
 <?php
+date_default_timezone_set('Europe/Paris');
+
+ini_set('include_path',
+	__DIR__.'/../lib'.PATH_SEPARATOR.
+	ini_get('include_path').PATH_SEPARATOR
+);
 
 # http://groups.google.com/group/php-standards/web/psr-0-final-proposal
 function __autoload($origClassName)
@@ -14,19 +20,8 @@ function __autoload($origClassName)
     $fileName  = str_replace('\\', DIRECTORY_SEPARATOR, $namespace).DIRECTORY_SEPARATOR;
   }
   $fileName .= str_replace('_', DIRECTORY_SEPARATOR, $className).'.php';
-
-  if (!include $fileName)
-  {
-    echo '<pre>';
-    echo "\nOops. An error occured while loading $fileName\n";
-    debug_print_backtrace();
-    echo '</pre>';
-    exit;
-  }
   
-  if (method_exists($origClassName, '__constructStatic')) {
-    $origClassName::__constructStatic();
-  }
+  require $fileName;
 }
 
 $autorunner = new Test\Unit\AutoRunner();

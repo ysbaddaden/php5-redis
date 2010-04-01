@@ -398,16 +398,19 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_multi_exec()
   {
-    $this->assert_ok($this->redis->multi());
-    $this->assert_equal($this->redis->set('mkey', 123), 'QUEUED');
-    $this->assert_ok($this->redis->discard());
-    
-    $this->assert_ok($this->redis->multi());
-    $this->assert_equal($this->redis->set('mkey', 456), 'QUEUED');
-    $this->assert_equal($this->redis->incr('mkey'), 'QUEUED');
-    $this->assert_equal($this->redis->exec(), array('OK', 457));
-    
-    $this->assert_equal($this->redis->get('mkey'), '457');
+    if (get_class($this) == 'TestRedis')
+    {
+      $this->assert_ok($this->redis->multi());
+      $this->assert_equal($this->redis->set('mkey', 123), 'QUEUED');
+      $this->assert_ok($this->redis->discard());
+      
+      $this->assert_ok($this->redis->multi());
+      $this->assert_equal($this->redis->set('mkey', 456), 'QUEUED');
+      $this->assert_equal($this->redis->incr('mkey'), 'QUEUED');
+      $this->assert_equal($this->redis->exec(), array('OK', 457));
+      
+      $this->assert_equal($this->redis->get('mkey'), '457');
+    }
   }
 }
 

@@ -11,6 +11,22 @@ With PUB/SUB, wait for messages with the +listen()+ method, after subscribing.
 Since +listen+ will block the execution of the PHP script, you might not be
 able to send other +subscribe+ or +unsubscribe+ calls.
 
+Examples:
+
+ $r = new Redis\Client();
+ 
+ $r->set('mykey', 'foobar');  # => 'OK'
+ $r->get('mykey');            # => 'foobar'
+ $r->setnx('mykey', 'foo');   # => false
+ $r->getset('mykey', 'foo');  # => 'foobar'
+ 
+ $r->incr('counter');         # => 1
+ $r->incrby('counter', 3);    # => 4
+ $r->decr('counter');         # => 3
+ 
+ $r->del('counter');          # => 1
+ $r->get('counter');          # => null
+
 == Clusters
 
 I'm not sure this <tt>Redis\Cluster</tt> class is a good idea, since an

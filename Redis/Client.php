@@ -62,7 +62,6 @@ namespace Redis;
 # Methods like +hgetall()+ will return an associative array in the form
 # +array($field => $value)+.
 # 
-# TODO: Properly handle MULTI/EXEC.
 class Client
 {
   const ERR_CONNECT   = 1;

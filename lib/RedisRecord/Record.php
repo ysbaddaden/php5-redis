@@ -8,9 +8,9 @@ abstract class Record extends Object
   
   function __get($property)
   {
-    if (array_key_exists(static::columns(), $property))
+    if (in_array($property, static::column_names()))
     {
-      if (!array_key_exists($this->_attributes, $property)) {
+      if (!array_key_exists($property, $this->_attributes)) {
         $this->_attributes[$property] = $this->_read_attribute($property);
       }
       return $this->_attributes[$property];
@@ -20,9 +20,10 @@ abstract class Record extends Object
   
   function __set($property, $value)
   {
-    if (array_key_exists(static::columns(), $property))
+    if (in_array($property, static::column_names()))
     {
-      switch(static::$columns[$property]['type'])
+      $column = static::column($property);
+      switch($column['type'])
       {
         case 'integer':   $value = (int)$value;           break;
         case 'string':    $value = (string)$value;        break;
@@ -47,19 +48,23 @@ abstract class Record extends Object
     return array_keys(self::$columns[get_called_class()]);
   }
   
+  protected static function column($column_name) {
+    return self::$columns[get_called_class()][$column_name];
+  }
+  
   protected function attributes() {
     return $this->_attributes;
   }
   
   protected function attributes_set($attributes)
   {
-    foreach($this->attributes as $k => $v) {
+    foreach($attributes as $k => $v) {
       $this->$k = $v;
     }
   }
   
-  abstract function _read_attribute($attribute);
-  abstract function _read_attributes($id);
+  abstract protected function _read_attribute($attribute);
+  abstract protected static function & _read_attributes($id);
 }
 
 ?>

@@ -3,7 +3,7 @@ namespace RedisRecord;
 
 if (!defined('REDIS_RECORD_HOST')) define('REDIS_RECORD_HOST', 'localhost');
 if (!defined('REDIS_RECORD_PORT')) define('REDIS_RECORD_PORT', 6379);
-if (!defined('REDIS_RECORD_DB'))   define('REDIS_RECORD_DB',   0xF);
+if (!defined('REDIS_RECORD_DB'))   define('REDIS_RECORD_DB',   0);
 
 class Base extends Record
 {
@@ -31,6 +31,10 @@ class Base extends Record
   # Returns record's ID.
   function id() {
     return $this->id;
+  }
+  
+  function new_record() {
+    return $this->new_record;
   }
   
   # Creates a new record.
@@ -73,6 +77,8 @@ class Base extends Record
       static::redis()->sadd(static::hash_name(), $this->id);
       $this->new_record = false;
     }
+    
+    return true;
   }
   
   # Finds one or many records.
@@ -165,8 +171,8 @@ class Base extends Record
     
   }
   
-  function reload($id) {
-    $this->attributes_set($this->_read_attributes($id));
+  function reload() {
+    $this->attributes_set($this->_read_attributes($this->id));
   }
   
   protected function _read_attribute($attribute)
@@ -175,11 +181,11 @@ class Base extends Record
       return null;
     }
     return defined('REDIS_RECORD_USE_HASHES') ?
-      static::redis()->hget(static::hash_name($this->id), $attribute);
+      static::redis()->hget(static::hash_name($this->id), $attribute) :
       static::redis()->get(static::hash_name($this->id).":$attribute");
   }
   
-  protected function & _read_attributes($id)
+  protected static function & _read_attributes($id)
   {
     if (defined('REDIS_RECORD_USE_HASHES')) {
       $rs = static::redis()->hgetall(static::hash_name($id));
@@ -190,7 +196,7 @@ class Base extends Record
       $columns = array_keys(static::columns());
       $keys    = array_map(function($key) use($hash) { return "$hash:$key"; }, $columns);
       $values  = static::redis()->mget($keys);
-      $rs      = array_combine($keys, $values);
+      $rs      = array_combine($columns, $values);
     }
     $rs['id'] = $id;
     return $rs;

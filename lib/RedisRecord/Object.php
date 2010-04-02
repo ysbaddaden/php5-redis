@@ -1,7 +1,7 @@
 <?php
 namespace RedisRecord;
 
-function array_collection($ary, $sep=',');
+function array_collection($ary, $sep=',')
 {
   if (!is_array($ary)) {
     $ary = explode($sep, $ary);
@@ -31,6 +31,12 @@ abstract class Object
 {
   function __get($property) {
     return method_exists($this, $property) ? $this->$property() : null;
+  }
+  
+  function __set($property, $value)
+  {
+    debug_print_backtrace();
+    trigger_error("Set refused: No such property $property.", E_USER_WARNING);
   }
 }
 

@@ -85,6 +85,7 @@ class Client
   
   private static $commands = array(
     # connection
+    'select'       => array(self::CMD_INLINE),
     'auth'         => array(self::CMD_INLINE),
     
     # multi/exec (untested)

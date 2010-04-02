@@ -1,0 +1,38 @@
+
+= RedisRecord
+
+This is an attempt to write an Object Mapping that uses at its storage.
+
+It's currently untested and far from completion.
+
+== Object Mapping
+
+The initial idea is to provide support for a table-like object.
+
+- we may create, update and delete a record.
+- records are stored in a hash, plus a list of all ids (for sort).
+- records are findable (sort, limit).
+- some fields are indexable, so we may search for them (find with conditions).
+
+== Relations
+
+In the future there shall be relations, either to other objects, or any
+Redis type like a +list+, +set+, +zset+ or a +hash+.
+
+== Note with searches
+
+Search conditions like > or < are not possible as is. But it might be possible
+to manipulate a list/zset to achieve this behavior.
+
+For instance, if I'm searching for a list of records within two dates, I could
+have a sorted set with the date (as a timestamp) for the weight, and the
+record's id as a member:
+
+  # indexes the webcomic publication date:
+  $r->zadd("webcomics:idx:published_at", $this->published_at, $id);
+  
+  # gets ids of webcomics published in dec, 2009:
+  $ids = $r->zrangebyscore_withscores("webcomics:published_at",
+    strtotime('2009-12-01'), strtotime('2009-12-31'));
+  
+

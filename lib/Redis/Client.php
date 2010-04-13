@@ -72,136 +72,134 @@ class Client
   
   const REP_FLOAT     = 1;
   const REP_BOOL      = 2;
-  const REP_ARRAY     = 3;
-  const REP_ASSOC     = 4;
-  const REP_QUEUED    = '+QUEUED';
+  const REP_ASSOC     = 3;
   
   public  $debug = false;
   private $sock;
   
   private static $commands = array(
     # connection
-#    'select'       => array(),
-#    'auth'         => array(),
+#    'select'       => null,
+#    'auth'         => null,
     
     # multi/exec (untested)
-#    'multi'        => array(),
-#    'exec'         => array(),
-#    'discard'      => array(),
+#    'multi'        => null,
+#    'exec'         => null,
+#    'discard'      => null,
     
     # generics
     'exists'       => array(self::REP_BOOL),
-#    'del'          => array(),
-#    'type'         => array(),
-#    'keys'         => array(),
-#    'randomkey'    => array(),
-#    'rename'       => array(),
+#    'del'          => null,
+#    'type'         => null,
+#    'keys'         => null,
+#    'randomkey'    => null,
+#    'rename'       => null,
     'renamenx'     => array(self::REP_BOOL),
-#    'dbsize'       => array(),
+#    'dbsize'       => null,
     'expire'       => array(self::REP_BOOL),
     'expireat'     => array(self::REP_BOOL),
-#    'ttl'          => array(),
-#    'select'       => array(),
+#    'ttl'          => null,
+#    'select'       => null,
     'move'         => array(self::REP_BOOL),
-#    'flushdb'      => array(),
-#    'flushall'     => array(),
+#    'flushdb'      => null,
+#    'flushall'     => null,
     
     # strings
-#    'set'          => array(),
-#    'get'          => array(),
-#    'getset'       => array(),
+#    'set'          => null,
+#    'get'          => null,
+#    'getset'       => null,
     'setnx'        => array(self::REP_BOOL),
-#    'mget'         => array(),
-#    'mset'         => array(),
+#    'mget'         => null,
+#    'mset'         => null,
     'msetnx'       => array(self::REP_BOOL),
-#    'incr'         => array(),
-#    'incrby'       => array(),
-#    'decr'         => array(),
-#    'decrby'       => array(),
+#    'incr'         => null,
+#    'incrby'       => null,
+#    'decr'         => null,
+#    'decrby'       => null,
     
     # lists
     'lpush'        => array(self::REP_BOOL),
     'rpush'        => array(self::REP_BOOL),
-#    'llen'         => array(),
-#    'lrange'       => array(),
-#    'ltrim'        => array(),
-#    'lindex'       => array(),
-#    'lset'         => array(),
-#    'lrem'         => array(),
-#    'lpop'         => array(),
-#    'rpop'         => array(),
-#    'rpoplpush'    => array(),
-#    'blpop'        => array(),
-#    'brpop'        => array(),
+#    'llen'         => null,
+#    'lrange'       => null,
+#    'ltrim'        => null,
+#    'lindex'       => null,
+#    'lset'         => null,
+#    'lrem'         => null,
+#    'lpop'         => null,
+#    'rpop'         => null,
+#    'rpoplpush'    => null,
+#    'blpop'        => null,
+#    'brpop'        => null,
     
     # sets
     'sadd'         => array(self::REP_BOOL),
     'srem'         => array(self::REP_BOOL),
-#    'spop'         => array(),
+#    'spop'         => null,
     'smove'        => array(self::REP_BOOL),
-#    'scard'        => array(),
+#    'scard'        => null,
     'sismember'    => array(self::REP_BOOL),
-#    'sinter'       => array(),
-#    'sinterstore'  => array(),
-#    'sunion'       => array(),
-#    'sunionstore'  => array(),
-#    'sdiff'        => array(),
-#    'sdiffstore'   => array(),
-    'smembers'     => array(self::REP_ARRAY),
-#    'srandmember'  => array(),
+#    'sinter'       => null,
+#    'sinterstore'  => null,
+#    'sunion'       => null,
+#    'sunionstore'  => null,
+#    'sdiff'        => null,
+#    'sdiffstore'   => null,
+#    'smembers'     => null,
+#    'srandmember'  => null,
     
     # zsets (sorted sets)
     'zadd'                     => array(self::REP_BOOL),
     'zrem'                     => array(self::REP_BOOL),
     'zincrby'                  => array(self::REP_FLOAT),
-    'zrange'                   => array(self::REP_ARRAY),
-    'zrevrange'                => array(self::REP_ARRAY),
-    'zrangebyscore'            => array(self::REP_ARRAY),
+#    'zrange'                   => null,
+#    'zrevrange'                => null,
+#    'zrangebyscore'            => null,
     'zrange_withscores'        => array(self::REP_ASSOC, 'zrange',        'withscores'),
     'zrevrange_withscores'     => array(self::REP_ASSOC, 'zrevrange',     'withscores'),
     'zrangebyscore_withscores' => array(self::REP_ASSOC, 'zrangebyscore', 'withscores'),
-#    'zcard'                    => array(),
+#    'zcard'                    => null,
     'zscore'                   => array(self::REP_FLOAT),
-#    'zremrangebyscore'         => array(),
-#    'zremrangebyrank'          => array(),
-#    'zrank'                    => array(),
-#    'zrevrank'                 => array(),
-#    'zcount'                   => array(),
-##    'zunion'                   => array(),
-##    'zinter'                   => array(),
+#    'zremrangebyscore'         => null,
+#    'zremrangebyrank'          => null,
+#    'zrank'                    => null,
+#    'zrevrank'                 => null,
+#    'zcount'                   => null,
+##    'zunion'                   => null,
+##    'zinter'                   => null,
     
     # sorting
-#    'sort'         => array(),
+#    'sort'         => null,
     
     # hashes
     'hset'         => array(self::REP_BOOL),
-#    'hmset'        => array(),
-#    'hget'         => array(),
+#    'hmset'        => null,
+#    'hget'         => null,
     'hdel'         => array(self::REP_BOOL),
-#    'hlen'         => array(),
-#    'hkeys'        => array(),
-#    'hvals'        => array(),
+#    'hlen'         => null,
+#    'hkeys'        => null,
+#    'hvals'        => null,
     'hgetall'      => array(self::REP_ASSOC),
     'hexists'      => array(self::REP_BOOL),
-#    'hincrby'      => array(),
+#    'hincrby'      => null,
     
     # persistence
-#    'save'         => array(),
-#    'bgsave'       => array(),
-#    'bgrewriteaof' => array(),
-#    'lastsave'     => array(),
+#    'save'         => null,
+#    'bgsave'       => null,
+#    'bgrewriteaof' => null,
+#    'lastsave'     => null,
     
     # pub/sub
-#    'subscribe'    => array(),
-#    'unsubscribe'  => array(),
-#    'publish'      => array(),
+#    'subscribe'    => null,
+#    'unsubscribe'  => null,
+#    'publish'      => null,
     
     # server
-#    'config'       => array(),
-#    'ping'         => array(),
-#    'shutdown'     => array(),
-#    'info'         => array(),
-#    'slaveof'      => array(),
+#    'config'       => null,
+#    'ping'         => null,
+#    'shutdown'     => null,
+#    'info'         => null,
+#    'slaveof'      => null,
   );
   
   function __construct($config=null) {
@@ -408,8 +406,6 @@ class Client
       {
         case self::REP_BOOL:  $rs[$i] = (bool)$r;  break;
         case self::REP_FLOAT: $rs[$i] = (float)$r; break;
-        case self::REP_ARRAY: $rs[$i] = ($r !== null) ? $r : array(); break;
-        
         case self::REP_ASSOC:
           $ary = array();
           for ($j=0; $j<count($r); $j+=2) {

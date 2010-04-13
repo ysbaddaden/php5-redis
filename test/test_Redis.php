@@ -51,6 +51,10 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_ok($this->redis->set('other', 'barfoo'));
     $this->assert_equal($this->redis->get('other'), 'barfoo');
     
+    $this->assert_ok($this->redis->set('some_null_key', null));
+#    $this->assert_null($this->redis->get('some_null_key'));
+    $this->assert_equal($this->redis->get('some_null_key'), "");
+    
     # mget / mset
     $this->assert_equal($this->redis->mget('keyA', 'keyB'), array(null, null));
     $this->assert_ok($this->redis->set('keyA', 'foobar'));
@@ -304,6 +308,11 @@ class TestRedis extends Test\Unit\TestCase
     # hmset
     $this->assert_ok($this->redis->hmset('profile:2', array('name' => 'Jess', 'password' => 'ie')), 'AAA');
     $this->assert_equal($this->redis->hgetall('profile:2'), array('name' => 'Jess', 'password' => 'ie'));
+    
+    # hmget
+    $this->assert_equal($this->redis->hmget('profile:2', array('name')), array('Jess'));
+    $this->assert_equal($this->redis->hmget('profile:2', array('name', 'password')), array('Jess', 'ie'));
+    $this->assert_equal($this->redis->hmget('profile:45', array('name')), array(null));
   }
   
   function test_sort()

@@ -258,17 +258,6 @@ class Client
     return $this->read_raw_reply();
   }
   
-  function hmset($key, $hash)
-  {
-    $args = array($key);
-    foreach($hash as $k => $v)
-    {
-      $args[] = $k;
-      $args[] = $v;
-    }
-    return $this->send_command(array(array('hmset', $args)));
-  }
-  
   # Sorts a list, set or sorted set.
   # 
   # Returns an array of integers/strings if getting only one field. Returns
@@ -358,16 +347,33 @@ class Client
       $args = $args[0];
     }
     
-    if ($cmd['name'] == 'mset'
-      or $cmd['name'] == "msetnx")
+    switch($cmd['name'])
     {
-      $_args = array();
-      foreach($args as $k => $v)
-      {
-        $_args[] = $k;
-        $_args[] = $v;
-      }
-      $args = $_args;
+      case 'mset': case 'msetnx':
+        $_args = array();
+        foreach($args as $k => $v)
+        {
+          $_args[] = $k;
+          $_args[] = $v;
+        }
+        $args = $_args;
+      break;
+      
+      case 'hmset': case 'hmsetnx':
+        $_args = array($args[0]);
+        foreach($args[1] as $k => $v)
+        {
+          $_args[] = $k;
+          $_args[] = $v;
+        }
+        $args = $_args;
+      break;
+      
+      case 'hmget':
+        $key  = $args[0];
+        $args = $args[1];
+        array_unshift($args, $key);
+      break;
     }
     
     if ($cmd['name'] !== null) {

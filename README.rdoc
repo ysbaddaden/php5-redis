@@ -2,14 +2,19 @@
 
 Yet another PHP client class for Redis.
 
+This one is (almost) a no-brainer. It takes commands, sends them to Redis using
+the multibulk protocol, reads the reply and returns it back. Sometimes the
+return will be particularly formatted (ie. bools or hashes), and some commands
+may have particular attributes (eg: +mget+ or +sort+).
+
 == Features
 
 It's currently compatible with Redis 1.2.x and supports most Redis 1.3.x
-features like hashes, zrank, publish/subscribe, multi/exec.
+features like hashes, zrank, publish/subscribe, multi/exec, etc.
 
-With PUB/SUB, wait for messages with the +listen()+ method, after subscribing.
-Since +listen+ will block the execution of the PHP script, you might not be
-able to send other +subscribe+ or +unsubscribe+ calls.
+You wait for messages with the +listen()+ method, after subscribing. Since
++listen+ will block the execution of the PHP script, you might not be
+able to send other +subscribe+ or +unsubscribe+ calls, though.
 
 Examples:
 
@@ -27,11 +32,14 @@ Examples:
  $r->del('counter');          # => 1
  $r->get('counter');          # => null
 
+Please note that some commands may not work when called in a pipeline
+(eg. +sort+).
+
 == Clusters
 
 I'm not sure this <tt>Redis\Cluster</tt> class is a good idea, since an
 official (and thus far better) +redis-cluster+ shall appear some time after
-Redis 2.0 is out...
+Redis 2.0 is out.
 
 Anyway, clusters are supported through the <tt>Redis\Cluster</tt> class, which
 is a drop-in replacement for the <tt>Redis\Client</tt> class, except for a few

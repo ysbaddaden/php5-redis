@@ -70,10 +70,6 @@ class Client
   const ERR_ARG_COUNT = 4;
   const ERR_REPLY     = 5;
   
-  const CMD_INLINE    = 1;
-  const CMD_BULK      = 2;
-  const CMD_MULTIBULK = 3;
-  
   const REP_FLOAT     = 1;
   const REP_BOOL      = 2;
   const REP_ARRAY     = 3;
@@ -85,127 +81,127 @@ class Client
   
   private static $commands = array(
     # connection
-    'select'       => array(self::CMD_INLINE),
-    'auth'         => array(self::CMD_INLINE),
+#    'select'       => array(),
+#    'auth'         => array(),
     
     # multi/exec (untested)
-    'multi'        => array(self::CMD_INLINE),
-    'exec'         => array(self::CMD_INLINE),
-    'discard'      => array(self::CMD_INLINE),
+#    'multi'        => array(),
+#    'exec'         => array(),
+#    'discard'      => array(),
     
     # generics
-    'exists'       => array(self::CMD_INLINE,    self::REP_BOOL),
-    'del'          => array(self::CMD_INLINE),
-    'type'         => array(self::CMD_INLINE),
-    'keys'         => array(self::CMD_INLINE),
-    'randomkey'    => array(self::CMD_INLINE),
-    'rename'       => array(self::CMD_INLINE),
-    'renamenx'     => array(self::CMD_INLINE,    self::REP_BOOL),
-    'dbsize'       => array(self::CMD_INLINE),
-    'expire'       => array(self::CMD_INLINE,    self::REP_BOOL),
-    'expireat'     => array(self::CMD_INLINE,    self::REP_BOOL),
-    'ttl'          => array(self::CMD_INLINE),
-    'select'       => array(self::CMD_INLINE),
-    'move'         => array(self::CMD_INLINE,    self::REP_BOOL),
-    'flushdb'      => array(self::CMD_INLINE),
-    'flushall'     => array(self::CMD_INLINE),
+    'exists'       => array(self::REP_BOOL),
+#    'del'          => array(),
+#    'type'         => array(),
+#    'keys'         => array(),
+#    'randomkey'    => array(),
+#    'rename'       => array(),
+    'renamenx'     => array(self::REP_BOOL),
+#    'dbsize'       => array(),
+    'expire'       => array(self::REP_BOOL),
+    'expireat'     => array(self::REP_BOOL),
+#    'ttl'          => array(),
+#    'select'       => array(),
+    'move'         => array(self::REP_BOOL),
+#    'flushdb'      => array(),
+#    'flushall'     => array(),
     
     # strings
-    'set'          => array(self::CMD_BULK),
-    'get'          => array(self::CMD_INLINE),
-    'getset'       => array(self::CMD_BULK),
-    'setnx'        => array(self::CMD_BULK,      self::REP_BOOL),
-    'mget'         => array(self::CMD_INLINE),
-    'mset'         => array(self::CMD_MULTIBULK),
-    'msetnx'       => array(self::CMD_MULTIBULK, self::REP_BOOL),
-    'incr'         => array(self::CMD_INLINE),
-    'incrby'       => array(self::CMD_INLINE),
-    'decr'         => array(self::CMD_INLINE),
-    'decrby'       => array(self::CMD_INLINE),
+#    'set'          => array(),
+#    'get'          => array(),
+#    'getset'       => array(),
+    'setnx'        => array(self::REP_BOOL),
+#    'mget'         => array(),
+#    'mset'         => array(),
+    'msetnx'       => array(self::REP_BOOL),
+#    'incr'         => array(),
+#    'incrby'       => array(),
+#    'decr'         => array(),
+#    'decrby'       => array(),
     
     # lists
-    'lpush'        => array(self::CMD_BULK,      self::REP_BOOL),
-    'rpush'        => array(self::CMD_BULK,      self::REP_BOOL),
-    'llen'         => array(self::CMD_INLINE),
-    'lrange'       => array(self::CMD_INLINE),
-    'ltrim'        => array(self::CMD_INLINE),
-    'lindex'       => array(self::CMD_INLINE),
-    'lset'         => array(self::CMD_BULK),
-    'lrem'         => array(self::CMD_BULK),
-    'lpop'         => array(self::CMD_INLINE),
-    'rpop'         => array(self::CMD_INLINE),
-    'rpoplpush'    => array(self::CMD_INLINE),
-    'blpop'        => array(self::CMD_INLINE),
-    'brpop'        => array(self::CMD_INLINE),
+    'lpush'        => array(self::REP_BOOL),
+    'rpush'        => array(self::REP_BOOL),
+#    'llen'         => array(),
+#    'lrange'       => array(),
+#    'ltrim'        => array(),
+#    'lindex'       => array(),
+#    'lset'         => array(),
+#    'lrem'         => array(),
+#    'lpop'         => array(),
+#    'rpop'         => array(),
+#    'rpoplpush'    => array(),
+#    'blpop'        => array(),
+#    'brpop'        => array(),
     
     # sets
-    'sadd'         => array(self::CMD_BULK,      self::REP_BOOL),
-    'srem'         => array(self::CMD_BULK,      self::REP_BOOL),
-    'spop'         => array(self::CMD_INLINE),
-    'smove'        => array(self::CMD_BULK,      self::REP_BOOL),
-    'scard'        => array(self::CMD_INLINE),
-    'sismember'    => array(self::CMD_BULK,      self::REP_BOOL),
-    'sinter'       => array(self::CMD_INLINE),
-    'sinterstore'  => array(self::CMD_INLINE),
-    'sunion'       => array(self::CMD_INLINE),
-    'sunionstore'  => array(self::CMD_INLINE),
-    'sdiff'        => array(self::CMD_INLINE),
-    'sdiffstore'   => array(self::CMD_INLINE),
-    'smembers'     => array(self::CMD_INLINE,    self::REP_ARRAY),
-    'srandmember'  => array(self::CMD_INLINE),
+    'sadd'         => array(self::REP_BOOL),
+    'srem'         => array(self::REP_BOOL),
+#    'spop'         => array(),
+    'smove'        => array(self::REP_BOOL),
+#    'scard'        => array(),
+    'sismember'    => array(self::REP_BOOL),
+#    'sinter'       => array(),
+#    'sinterstore'  => array(),
+#    'sunion'       => array(),
+#    'sunionstore'  => array(),
+#    'sdiff'        => array(),
+#    'sdiffstore'   => array(),
+    'smembers'     => array(self::REP_ARRAY),
+#    'srandmember'  => array(),
     
     # zsets (sorted sets)
-    'zadd'                     => array(self::CMD_BULK,   self::REP_BOOL),
-    'zrem'                     => array(self::CMD_BULK,   self::REP_BOOL),
-    'zincrby'                  => array(self::CMD_BULK,   self::REP_FLOAT),
-    'zrange'                   => array(self::CMD_INLINE, self::REP_ARRAY),
-    'zrevrange'                => array(self::CMD_INLINE, self::REP_ARRAY),
-    'zrangebyscore'            => array(self::CMD_INLINE, self::REP_ARRAY),
-    'zrange_withscores'        => array(self::CMD_INLINE, self::REP_ASSOC, 'zrange',        'withscores'),
-    'zrevrange_withscores'     => array(self::CMD_INLINE, self::REP_ASSOC, 'zrevrange',     'withscores'),
-    'zrangebyscore_withscores' => array(self::CMD_INLINE, self::REP_ASSOC, 'zrangebyscore', 'withscores'),
-    'zcard'                    => array(self::CMD_INLINE),
-    'zscore'                   => array(self::CMD_BULK,   self::REP_FLOAT),
-    'zremrangebyscore'         => array(self::CMD_INLINE),
-    'zremrangebyrank'          => array(self::CMD_INLINE),
-    'zrank'                    => array(self::CMD_BULK),
-    'zrevrank'                 => array(self::CMD_BULK),
-    'zcount'                   => array(self::CMD_INLINE),
-#    'zunion'                   => array(self::CMD_INLINE),
-#    'zinter'                   => array(self::CMD_INLINE),
+    'zadd'                     => array(self::REP_BOOL),
+    'zrem'                     => array(self::REP_BOOL),
+    'zincrby'                  => array(self::REP_FLOAT),
+    'zrange'                   => array(self::REP_ARRAY),
+    'zrevrange'                => array(self::REP_ARRAY),
+    'zrangebyscore'            => array(self::REP_ARRAY),
+    'zrange_withscores'        => array(self::REP_ASSOC, 'zrange',        'withscores'),
+    'zrevrange_withscores'     => array(self::REP_ASSOC, 'zrevrange',     'withscores'),
+    'zrangebyscore_withscores' => array(self::REP_ASSOC, 'zrangebyscore', 'withscores'),
+#    'zcard'                    => array(),
+    'zscore'                   => array(self::REP_FLOAT),
+#    'zremrangebyscore'         => array(),
+#    'zremrangebyrank'          => array(),
+#    'zrank'                    => array(),
+#    'zrevrank'                 => array(),
+#    'zcount'                   => array(),
+##    'zunion'                   => array(),
+##    'zinter'                   => array(),
     
     # sorting
-    'sort'         => array(self::CMD_INLINE),
+#    'sort'         => array(),
     
     # hashes
-    'hset'         => array(self::CMD_MULTIBULK,  self::REP_BOOL),
-    'hmset'        => array(self::CMD_MULTIBULK),
-    'hget'         => array(self::CMD_BULK),
-    'hdel'         => array(self::CMD_BULK,       self::REP_BOOL),
-    'hlen'         => array(self::CMD_INLINE),
-    'hkeys'        => array(self::CMD_INLINE),
-    'hvals'        => array(self::CMD_INLINE),
-    'hgetall'      => array(self::CMD_INLINE,     self::REP_ASSOC),
-    'hexists'      => array(self::CMD_BULK,       self::REP_BOOL),
-    'hincrby'      => array(self::CMD_MULTIBULK),
+    'hset'         => array(self::REP_BOOL),
+#    'hmset'        => array(),
+#    'hget'         => array(),
+    'hdel'         => array(self::REP_BOOL),
+#    'hlen'         => array(),
+#    'hkeys'        => array(),
+#    'hvals'        => array(),
+    'hgetall'      => array(self::REP_ASSOC),
+    'hexists'      => array(self::REP_BOOL),
+#    'hincrby'      => array(),
     
     # persistence
-    'save'         => array(self::CMD_INLINE),
-    'bgsave'       => array(self::CMD_INLINE),
-    'bgrewriteaof' => array(self::CMD_INLINE),
-    'lastsave'     => array(self::CMD_INLINE),
+#    'save'         => array(),
+#    'bgsave'       => array(),
+#    'bgrewriteaof' => array(),
+#    'lastsave'     => array(),
     
     # pub/sub
-    'subscribe'    => array(self::CMD_INLINE),
-    'unsubscribe'  => array(self::CMD_INLINE),
-    'publish'      => array(self::CMD_BULK),
+#    'subscribe'    => array(),
+#    'unsubscribe'  => array(),
+#    'publish'      => array(),
     
     # server
-    'config'       => array(self::CMD_BULK),
-    'ping'         => array(self::CMD_INLINE),
-    'shutdown'     => array(self::CMD_INLINE),
-    'info'         => array(self::CMD_INLINE),
-    'slaveof'      => array(self::CMD_INLINE),
+#    'config'       => array(),
+#    'ping'         => array(),
+#    'shutdown'     => array(),
+#    'info'         => array(),
+#    'slaveof'      => array(),
   );
   
   function __construct($config=null) {
@@ -252,35 +248,6 @@ class Client
     }
   }
   
-  # Returns an array of integers/strings if getting only one field.
-  # Returns an array of arrays (of integers/strings) when getting multiple fields.
-  # 
-  # For instance:
-  # 
-  #   $r->sort('stories get # get story:*:title get story:*:summary');
-  function sort()
-  {
-    $args = func_get_args();
-    $rs   = $this->send_command(array(array('sort', $args)));
-    
-    $count = substr_count(strtoupper(implode(' ', $args)), ' GET ');
-    if ($count > 1)
-    {
-      $ary = array();
-      for($i=0; $i<count($rs); $i+=$j)
-      {
-        $a = array();
-        for($j=0; $j<$count; $j++) {
-          $a[] = $rs[$i+$j];
-        }
-        $ary[] = $a;
-      }
-      return $ary;
-    }
-    
-    return $rs;
-  }
-  
   function pipeline($closure)
   {
     $pipe = new Pipeline($this);
@@ -295,26 +262,95 @@ class Client
   
   function hmset($key, $hash)
   {
-    $ary = array($key);
+    $args = array($key);
     foreach($hash as $k => $v)
     {
-      $ary[] = $k;
-      $ary[] = $v;
+      $args[] = $k;
+      $args[] = $v;
     }
-    return $this->send_command(array(array('hmset', $ary)));
+    return $this->send_command(array(array('hmset', $args)));
+  }
+  
+  # Sorts a list, set or sorted set.
+  # 
+  # Returns an array of integers/strings if getting only one field. Returns
+  # an array of arrays (of integers/strings) when getting multiple fields.
+  # 
+  # Options:
+  # 
+  # - +by+     - sort by other key
+  # - +order+  - either +asc+ (default) or +desc+
+  # - +limit+
+  # - +offset+
+  # - +get+    - an array of keys
+  # - +store+  - store result in an external key
+  function sort($key, $options=array())
+  {
+    $args = array($key);
+    
+    if (isset($options['by'])) {
+      $args[] = 'by'; $args[] = $options['by'];
+    }
+    
+    if (isset($options['offset']) and !isset($options['limit'])) {
+      $options['limit'] = 0;
+    }
+    if (isset($options['limit']))
+    {
+      $args[] = 'limit';
+      $args[] = isset($options['offset']) ? $options['offset'] : 0;
+      $args[] = $options['limit'];
+    }
+    
+    if (isset($options['alpha']) and $options['alpha']) {
+      $args[] = 'alpha';
+    }
+    
+    if (isset($options['order'])) {
+      $args[] = $options['order'];
+    }
+    
+    if (isset($options['get']))
+    {
+      foreach($options['get'] as $v) {
+        $args[] = 'get'; $args[] = $v;
+      }
+    }
+    
+    if (isset($options['store'])) {
+      $args[] = 'store'; $args[] = $options['store'];
+    }
+    
+    $rs = $this->send_command(array(array('sort', $args)));
+    
+    if (isset($options['get'])
+      and count($options['get']) > 1)
+    {
+      $ary = array();
+      for($i=0; $i<count($rs); $i+=$j)
+      {
+        $a = array();
+        for($j=0; $j<count($options['get']); $j++) {
+          $a[] = $rs[$i+$j];
+        }
+        $ary[] = $a;
+      }
+      return $ary;
+    }
+    
+    return $rs;
   }
   
   # :nodoc:
   static function lookup_command($name)
   {
     $cmd = isset(self::$commands[$name]) ?
-      self::$commands[$name] : array(self::CMD_MULTIBULK);
+      self::$commands[$name] : array();
     
     return array(
-      'name'    => isset($cmd[2]) ? $cmd[2] : $name,
-      'type'    => $cmd[0],
-      'reply'   => isset($cmd[1]) ? $cmd[1] : null,
-      'options' => isset($cmd[3]) ? $cmd[3] : '',
+      'name'    => isset($cmd[1]) ? $cmd[1] : $name,
+      'reply'   => isset($cmd[0]) ? $cmd[0] : null,
+      'options' => isset($cmd[2]) ? $cmd[2] : '',
     );
   }
   
@@ -324,42 +360,8 @@ class Client
       $args = $args[0];
     }
     
-    switch($cmd['type'])
-    {
-      case self::CMD_INLINE:
-        $str = $this->format_inline_command($cmd['name'], $args);
-        return empty($cmd['options']) ? $str : "$str {$cmd['options']}";
-      
-      case self::CMD_BULK:
-        return $this->format_bulk_command($cmd['name'], $args);
-      
-      case self::CMD_MULTIBULK:
-        return $this->format_multibulk_command($cmd['name'], $args);
-    }
-  }
-  
-  private function format_inline_command($name, $args=array())
-  {
-    $cmd = $name;
-    foreach($args as $arg) {
-      $cmd .= ' '.(is_array($arg) ? implode(' ', $arg) : $arg);
-    }
-    return $cmd;
-  }
-  
-  private function format_bulk_command($name, $args=array())
-  {
-    $bulk_data = array_pop($args);
-    $cmd  = "$name ".implode(' ', $args).' ';
-    $cmd .= sprintf("%lu\r\n", mb_strlen($bulk_data, '8bit'));
-    $cmd .= $bulk_data;
-    return $cmd;
-  }
-  
-  private function format_multibulk_command($name, $args=array())
-  {
-    if ($name == 'mset'
-      or $name == "msetnx")
+    if ($cmd['name'] == 'mset'
+      or $cmd['name'] == "msetnx")
     {
       $_args = array();
       foreach($args as $k => $v)
@@ -369,8 +371,13 @@ class Client
       }
       $args = $_args;
     }
-    if ($name !== null) {
-      array_unshift($args, $name);
+    
+    if ($cmd['name'] !== null) {
+      array_unshift($args, $cmd['name']);
+    }
+    
+    if (!empty($cmd['options'])) {
+      $args[] = $cmd['options'];
     }
     
     $cmd = '*'.count($args);

@@ -11,7 +11,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->redis->debug = in_array('-d', $_SERVER['argv']);
   }
   
-  function is_redis13()
+  function is_redis2()
   {
     try
     {
@@ -239,12 +239,12 @@ class TestRedis extends Test\Unit\TestCase
     
     # zrangebyscore
     $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0), array('b', 'c'));
-    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0, 'LIMIT 0 1'), array('b'));
-    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 2, 10, 'LIMIT 2 2'), array('a', 'd'));
+    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0, 'LIMIT', 0, 1), array('b'));
+    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 2, 10, 'LIMIT', 2, 2), array('a', 'd'));
     
-    if ($this->is_redis13())
+    if ($this->is_redis2())
     {
-      $this->assert_equal($this->redis->zrangebyscore_withscores('sorted_key', 2, 10, 'LIMIT 2 2'),
+      $this->assert_equal($this->redis->zrangebyscore_withscores('sorted_key', 2, 10, 'LIMIT', 2, 2),
         array('a' => 3.0, 'd' => 4.0));
       
       # z(rev)rank
@@ -263,7 +263,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->zremrangebyscore('sorted_key', 1.0, 2.0), 2);
     $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('a', 'd'));
     
-    if ($this->is_redis13())
+    if ($this->is_redis2())
     {
       # zremrangebyrank
       $this->assert_equal($this->redis->zremrangebyrank('sorted_key', 0, 0), 1);
@@ -273,7 +273,7 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_hashes()
   {
-    if (!$this->is_redis13()) return;
+    if (!$this->is_redis2()) return;
     
     # hexists / hset / hlen
     $this->assert_false($this->redis->hexists('profile:1', 'name'));
@@ -324,24 +324,24 @@ class TestRedis extends Test\Unit\TestCase
     $this->redis->set('webcomic:4:created_at', '2009-07-12');
     $this->redis->rpush('webcomics', 4);
     
-    $this->assert_equal($this->redis->sort("webcomics"), array(1, 2, 3, 4));
-    $this->assert_equal($this->redis->sort("webcomics desc"), array(4, 3, 2, 1));
-    $this->assert_equal($this->redis->sort("webcomics limit 0 3"), array(1, 2, 3));
-    $this->assert_equal($this->redis->sort("webcomics limit 2 1"), array(3));
+    $this->assert_equal($this->redis->sort('webcomics'), array(1, 2, 3, 4));
+    $this->assert_equal($this->redis->sort('webcomics', array('order' => 'desc')), array(4, 3, 2, 1));
+    $this->assert_equal($this->redis->sort('webcomics', array('limit' => 3)), array(1, 2, 3));
+    $this->assert_equal($this->redis->sort('webcomics', array('limit' => 1, 'offset' => 2)), array(3));
     
-    $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at"),
+    $this->assert_equal($this->redis->sort("webcomics", array('by' => 'webcomic:*:created_at' )),
       array(1, 3, 4, 2));
     
-    $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at get webcomic:*:title"),
+    $this->assert_equal($this->redis->sort("webcomics", array('by' => "webcomic:*:created_at", 'get' => array("webcomic:*:title"))),
       array('deo', 'jim', 'tyler', 'gordo'));
     
-    $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at get webcomic:*:title get #"),
+    $this->assert_equal($this->redis->sort("webcomics", array('by' => "webcomic:*:created_at", 'get' => array("webcomic:*:title", "#"))),
       array(array('deo', 1), array('jim', 3), array('tyler', 4), array('gordo', 2)));
     
-    $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at get # get webcomic:*:title get webcomic:*:created_at"),
+    $this->assert_equal($this->redis->sort("webcomics", array('by' => "webcomic:*:created_at", 'get' => array("#", "webcomic:*:title", "webcomic:*:created_at"))),
       array(array(1, 'deo', '2007-02-01'), array(3, 'jim', '2008-05-27'), array(4, 'tyler', '2009-07-12'), array(2, 'gordo', '2010-03-05')));
     
-    $this->assert_equal($this->redis->sort("webcomics by webcomic:*:created_at STORE webcomics:idx:created_at"), 4);
+    $this->assert_equal($this->redis->sort("webcomics", array('by' => "webcomic:*:created_at", 'store' => "webcomics:idx:created_at")), 4);
   }
   
   function test_pipeline()
@@ -374,7 +374,7 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_publish_subscribe()
   {
-    if (get_class($this) == 'TestRedis')
+    if (get_class($this) == 'TestRedis' and $this->is_redis2())
     {
       $this->assert_equal($this->redis->subscribe('mychat'), array('subscribe', 'mychat', 1));
       
@@ -402,7 +402,7 @@ class TestRedis extends Test\Unit\TestCase
   
   function test_multi_exec()
   {
-    if (get_class($this) == 'TestRedis')
+    if (get_class($this) == 'TestRedis' and $this->is_redis2())
     {
       $this->assert_ok($this->redis->multi());
       $this->assert_equal($this->redis->set('mkey', 123), 'QUEUED');
@@ -417,7 +417,6 @@ class TestRedis extends Test\Unit\TestCase
     }
   }
 }
-
 
 class TestRedisCluster extends TestRedis
 {

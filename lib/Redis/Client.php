@@ -179,6 +179,7 @@ class Client
     
     # hashes
     'hset'         => array(self::CMD_MULTIBULK,  self::REP_BOOL),
+    'hmset'        => array(self::CMD_MULTIBULK),
     'hget'         => array(self::CMD_BULK),
     'hdel'         => array(self::CMD_BULK,       self::REP_BOOL),
     'hlen'         => array(self::CMD_INLINE),
@@ -290,6 +291,17 @@ class Client
   # PUB/SUB: reads from the socket until there is a message.
   function listen() {
     return $this->read_raw_reply();
+  }
+  
+  function hmset($key, $hash)
+  {
+    $ary = array($key);
+    foreach($hash as $k => $v)
+    {
+      $ary[] = $k;
+      $ary[] = $v;
+    }
+    return $this->send_command(array(array('hmset', $ary)));
   }
   
   # :nodoc:

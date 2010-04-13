@@ -300,6 +300,10 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', 1), 1);
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', 6), 7);
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', -2), 5);
+    
+    # hmset
+    $this->assert_ok($this->redis->hmset('profile:2', array('name' => 'Jess', 'password' => 'ie')), 'AAA');
+    $this->assert_equal($this->redis->hgetall('profile:2'), array('name' => 'Jess', 'password' => 'ie'));
   }
   
   function test_sort()

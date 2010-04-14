@@ -92,7 +92,9 @@ class TestRedis extends Test\Unit\TestCase
     
     # del
     $this->assert_equal($this->redis->del('counter', 'another_counter'), 2);
-    $this->assert_equal($this->redis->mget('counter', 'another_counter'), array(null, null));
+    $this->assert_equal($this->redis->del(array('some_key', 'some_null_key')), 2);
+    $this->assert_equal($this->redis->mget('counter', 'another_counter', 'some_key'),
+      array(null, null, null));
   }
   
   function test_list_commands()

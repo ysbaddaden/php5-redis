@@ -167,7 +167,7 @@ class Cluster
             $msets_by_server[$server][$key] = $value;
           }
           foreach($msets_by_server as $server => $keys) {
-            $commands_by_server[$server][$i] = array($cmd[0], $keys);
+            $commands_by_server[$server][$i] = array($cmd[0], array($keys));
           }
         break;
         

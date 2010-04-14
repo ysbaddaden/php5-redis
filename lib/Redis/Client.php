@@ -11,7 +11,7 @@ namespace Redis;
 # See http://code.google.com/redis for the full list of commands and their
 # documentation.
 # 
-# = Examples
+# == Examples
 # 
 #   $r = new Redis\Client();
 #   
@@ -26,6 +26,21 @@ namespace Redis;
 #   
 #   $r->del('counter');          # => 1
 #   $r->get('counter');          # => null
+# 
+# == MGET
+# 
+#   $r->mget('key1', 'key2', 'keyn');
+#   $r->mget(array('key1', 'key2', 'keyn'));
+# 
+# == MSET / MSETNX
+# 
+#   $r->mset(array('key1' => 1, 'key2' => 'value2', 'keyn' => 'valuen'));
+#   $r->msetnx(array('key1' => 1, 'key2' => 'value2', 'keyn' => 'valuen'));
+# 
+# == DEL
+# 
+#   $r->del('key1', 'key2', 'keyn');
+#   $r->del(array('key1', 'key2', 'keyn'));
 # 
 # = Replies
 # 
@@ -343,15 +358,17 @@ class Client
   
   private function format_command($cmd, $args)
   {
-    if (isset($args[0]) and is_array($args[0])) {
-      $args = $args[0];
-    }
-    
     switch($cmd['name'])
     {
+      case 'mget': case 'del':
+        if (isset($args[0]) and is_array($args[0])) {
+          $args = $args[0];
+        }
+      break;
+      
       case 'mset': case 'msetnx':
         $_args = array();
-        foreach($args as $k => $v)
+        foreach($args[0] as $k => $v)
         {
           $_args[] = $k;
           $_args[] = $v;

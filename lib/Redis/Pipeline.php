@@ -7,25 +7,17 @@ namespace Redis;
 # :nodoc:
 class Pipeline
 {
-  private $redis;
-  private $commands = array();
+  public $commands = array();
   
-  function __construct($redis) {
-    $this->redis = $redis;
-  }
-  
-  function __call($name, $args) {
-    $this->commands[] = array($name, $args);
-  }
-  
-  function execute()
+  function call($command, $args)
   {
-    if (empty($this->commands)) return null;
-    return $this->redis->send_command($this->commands);
-  }
-  
-  function commands() {
-    return $this->commands;
+    if (is_array($args)) {
+      array_unshift($args, $command);
+    }
+    else {
+      $args = func_get_args();
+    }
+    $this->commands[] = $args;
   }
 }
 

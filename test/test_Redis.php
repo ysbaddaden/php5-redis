@@ -7,8 +7,8 @@ class TestRedis extends Test\Unit\TestCase
   
   function setup()
   {
-    $this->redis = new Redis\Client(array('db' => 0xF, 'port' => 6380));
-    $this->redis->debug = in_array('-d', $_SERVER['argv']);
+    $this->redis = new Redis(array('db' => 0xF, 'port' => 6380));
+#    $this->redis->debug = in_array('-d', $_SERVER['argv']);
   }
   
   function is_redis2()
@@ -31,43 +31,40 @@ class TestRedis extends Test\Unit\TestCase
   {
     $this->assert_throws('Redis\Exception', function()
     {
-      $r = new Redis\Client(array('host' => 'localhost', 'port' => '1234567890'));
-      @$r->connect();
-    }, 'Redis::ERR_CONNECT');
-  }
-  
-  protected function assert_ok($test) {
-    $this->assert_equal($test, 'OK');
+      $r = new Redis(array('host' => 'localhost', 'port' => '1234567890'));
+      @$r->get('key');
+    }, 'Redis\Client::ERR_CONNECT');
+    
+    # TODO: test authentication error
   }
   
   function test_string_commands()
   {
     # get / set
     $this->assert_null($this->redis->get('mykey'));
-    $this->assert_ok($this->redis->set('mykey', 'foobar'));
+    $this->redis->set('mykey', 'foobar');
     $this->assert_equal($this->redis->get('mykey'), 'foobar');
     
     $this->assert_null($this->redis->get('other'));
-    $this->assert_ok($this->redis->set('other', 'barfoo'));
+    $this->redis->set('other', 'barfoo');
     $this->assert_equal($this->redis->get('other'), 'barfoo');
     
-    $this->assert_ok($this->redis->set('some_null_key', null));
-#    $this->assert_null($this->redis->get('some_null_key'));
+    $this->redis->set('some_null_key', null);
     $this->assert_equal($this->redis->get('some_null_key'), "");
     
     # mget / mset
     $this->assert_equal($this->redis->mget('keyA', 'keyB'), array(null, null));
-    $this->assert_ok($this->redis->set('keyA', 'foobar'));
+    $this->redis->set('keyA', 'foobar');
     $this->assert_equal($this->redis->mget('keyA', 'keyB'), array('foobar', null));
     
-    $this->assert_ok($this->redis->mset(array('keyA' => 'blabla', 'keyB' => 'foobar')));
+    $this->redis->mset(array('keyA' => 'blabla', 'keyB' => 'foobar'));
     $this->assert_equal($this->redis->mget(array('keyA', 'keyB')), array('blabla', 'foobar'));
     
     # setnx
     $this->assert_true($this->redis->setnx('keyC', 'foo'));
     $this->assert_false($this->redis->setnx('keyC', 'bar'));
     $this->assert_equal($this->redis->get('keyC'), 'foo');
-    
+
     # msetnx
     if (get_class($this) == 'TestRedis')
     {
@@ -114,7 +111,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->lrange('mylist', 2, 1), array());
     
     # ltrim
-    $this->assert_ok($this->redis->ltrim('mylist', 0, 1));
+    $this->redis->ltrim('mylist', 0, 1);
     $this->assert_equal($this->redis->lrange('mylist', 0, 2), array('c', 'a'));
     
     # lindex
@@ -122,7 +119,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->lindex('mylist', 1), 'a');
     
     # lset
-    $this->assert_ok($this->redis->lset('mylist', 0, 'g'));
+    $this->redis->lset('mylist', 0, 'g');
     $this->assert_equal($this->redis->lindex('mylist', 0), 'g');
     
     # lrem
@@ -143,6 +140,9 @@ class TestRedis extends Test\Unit\TestCase
     # lpop / rpop
     $this->assert_equal($this->redis->lpop('mylist'), 'g');
     $this->assert_equal($this->redis->rpop('mylist'), 'a');
+    
+    # TODO: test BLPOP
+    # TODO: test BRPOP
     
     # rpoplpush
     $this->redis->rpush('from_list', 'a');
@@ -213,7 +213,7 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->sunionstore('s1s2s3', 's1', 's2', 's3'), 3);
   }
   
-  function test_sorted_sets()
+  function test_sorted_sets_commands()
   {
     # zadd / zcard
     $this->assert_true($this->redis->zadd('sorted_key', 1, 'a'));
@@ -240,18 +240,18 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->zrevrange('sorted_key', 2, 10), array('c', 'b'));
     
     # z(rev)range withscores
-    $this->assert_equal($this->redis->zrange_withscores('sorted_key', 1.0, 2.0), array('c' => 2.0, 'a' => 3.0));
-    $this->assert_equal($this->redis->zrevrange_withscores('sorted_key', 2, 10), array('c' => 2.0, 'b' => 2.0));
+    $this->assert_equal($this->redis->zrange_with_scores('sorted_key', 1.0, 2.0), array('c' => 2.0, 'a' => 3.0));
+    $this->assert_equal($this->redis->zrevrange_with_scores('sorted_key', 2, 10), array('c' => 2.0, 'b' => 2.0));
     
     # zrangebyscore
     $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0), array('b', 'c'));
-    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0, 'LIMIT', 0, 1), array('b'));
-    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 2, 10, 'LIMIT', 2, 2), array('a', 'd'));
+#    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 1.0, 2.0, 'LIMIT', 0, 1), array('b'));
+#    $this->assert_equal($this->redis->zrangebyscore('sorted_key', 2, 10, 'LIMIT', 2, 2), array('a', 'd'));
     
     if ($this->is_redis2())
     {
-      $this->assert_equal($this->redis->zrangebyscore_withscores('sorted_key', 2, 10, 'LIMIT', 2, 2),
-        array('a' => 3.0, 'd' => 4.0));
+#      $this->assert_equal($this->redis->zrangebyscore_with_scores('sorted_key', 2, 10, 'LIMIT', 2, 2),
+#        array('a' => 3.0, 'd' => 4.0));
       
       # z(rev)rank
       $this->assert_equal($this->redis->zrank('sorted_key', 'a'), 2);
@@ -274,6 +274,9 @@ class TestRedis extends Test\Unit\TestCase
       # zremrangebyrank
       $this->assert_equal($this->redis->zremrangebyrank('sorted_key', 0, 0), 1);
       $this->assert_equal($this->redis->zrange('sorted_key', 0, 10), array('d'));
+      
+      # TODO: test ZUNIONSTORE
+      # TODO: test ZINTERSTORE
     }
   }
   
@@ -308,11 +311,11 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->hincrby('profile:1', 'counter', -2), 5);
     
     # hmset
-    $this->assert_ok($this->redis->hmset('profile:2', array('name' => 'Jess', 'password' => 'ie')), 'AAA');
+    $this->redis->hmset('profile:2', array('name' => 'Jess', 'password' => 'ie'), 'AAA');
     $this->assert_equal($this->redis->hgetall('profile:2'), array('name' => 'Jess', 'password' => 'ie'));
     
     # hmget
-    $this->assert_equal($this->redis->hmget('profile:2', array('name')), array('Jess'));
+    $this->assert_equal($this->redis->hmget('profile:2', 'name'), array('Jess'));
     $this->assert_equal($this->redis->hmget('profile:2', array('name', 'password')), array('Jess', 'ie'));
     $this->assert_equal($this->redis->hmget('profile:45', array('name')), array(null));
   }
@@ -355,122 +358,95 @@ class TestRedis extends Test\Unit\TestCase
     $this->assert_equal($this->redis->sort("webcomics", array('by' => "webcomic:*:created_at", 'store' => "webcomics:idx:created_at")), 4);
   }
   
-  function test_pipeline()
-  {
-    $this->assert_null($this->redis->pipeline(function() {}));
-    $this->assert_equal($this->redis->pipeline(function($pipe)
-    {
-      $pipe->mset(array('key1' => 1, 'key2' => 4));
-      $pipe->set('key3', 45);
-      $pipe->setnx('key1', 2);
-      $pipe->incr('key1');
-      $pipe->decr('key2');
-      $pipe->incr('key3');
-      $pipe->incr('key4');
-      $pipe->decr('key5');
-      $pipe->del('key1', 'key2');
-    }), array('OK', 'OK', false, 2, 3, 46, 1, -1, 2));
-  }
-  
   function test_server_commands()
   {
     # ping
-    $this->assert_equal($this->redis->ping(), 'PONG');
+    $this->assert_true($this->redis->ping());
     
     # flushdb / dbsize
     $this->assert_not_equal($this->redis->dbsize(), 0);
-    $this->assert_ok($this->redis->flushdb());
+    $this->redis->flushdb();
     $this->assert_equal($this->redis->dbsize(), 0);
   }
   
-  function test_publish_subscribe()
+  function test_pipelined()
   {
-    if (get_class($this) == 'TestRedis' and $this->is_redis2())
+    $this->assert_null($this->redis->pipelined(function() {}));
+    $this->assert_equal($this->redis->pipelined(function($redis)
     {
-      $this->assert_equal($this->redis->subscribe('mychat'), array('subscribe', 'mychat', 1));
-      
-      $pid = pcntl_fork();
-      if ($pid == -1) {
-        echo "WARNING: cannot test pub/sub, unable to fork...\n";
-      }
-      elseif ($pid)
-      {
-        $this->assert_equal($this->redis->listen(), array('message', 'mychat', 'hello there'));
-        $this->assert_equal($this->redis->listen(), array('message', 'mychat', 'how are you?'));
-        pcntl_wait($status);
-      }
-      else
-      {
-        $r = new Redis\Client(array('db' => 0xF, 'port' => 6380));
-        $this->assert_equal($r->publish('mychat', 'hello there'), 1);
-        $this->assert_equal($r->publish('mychat', 'how are you?'), 1);
-        exit;
-      }
-      
-      $this->assert_equal($this->redis->unsubscribe(), array('unsubscribe', 'mychat', 0));
-    }
+      $redis->mset(array('key1' => 1, 'key2' => 4));
+      $redis->set('key3', 45);
+      $redis->setnx('key1', 2);
+      $redis->incr('key1');
+      $redis->decr('key2');
+      $redis->incr('key3');
+      $redis->incr('key4');
+      $redis->decr('key5');
+      $redis->del('key1', 'key2');
+    }), array('OK', 'OK', false, 2, 3, 46, 1, -1, 2));
   }
   
   function test_multi_exec()
   {
     if (get_class($this) == 'TestRedis' and $this->is_redis2())
     {
-      $this->assert_ok($this->redis->multi());
-      $this->assert_equal($this->redis->set('mkey', 123), 'QUEUED');
-      $this->assert_ok($this->redis->discard());
+      $this->redis->multi();
+      $this->redis->set('mkey', 123);
+      $this->redis->discard();
+      $this->assert_not_equal($this->redis->get('mkey'), 123);
       
-      $this->assert_ok($this->redis->multi());
-      $this->assert_equal($this->redis->set('mkey', 456), 'QUEUED');
-      $this->assert_equal($this->redis->incr('mkey'), 'QUEUED');
+      $this->redis->multi();
+      $this->redis->set('mkey', 456);
+      $this->redis->incr('mkey');
       $this->assert_equal($this->redis->exec(), array('OK', 457));
-      
       $this->assert_equal($this->redis->get('mkey'), '457');
+      
+      # with closures:
+      $this->redis->multi(function($redis) {
+        $redis->set('mkey', 123);
+      });
+      $this->assert_equal($this->redis->get('mkey'), '123');
+      
+      $redis = $this->redis;
+      $this->assert_throws('Exception', function() use($redis)
+      {
+        $redis->multi(function($redis)
+        {
+          $redis->set('mkey', 789);
+          throw new Exception("");
+        });
+      });
+      $this->assert_equal($this->redis->get('mkey'), '123');
     }
   }
-}
-
-class TestRedisCluster extends TestRedis
-{
-  function setup()
-  {
-    $server1 = array('db' => 0xF, 'port' => 6380);
-    $server2 = array('db' => 0xF, 'port' => 6381);
-    $debug   = in_array('-d', $_SERVER['argv']);
-    
-    $this->redis = new Redis\Cluster(array($server1, $server2), function($key) {
-      return ($key == 'keyA' or $key == 'key2' or $key == 'key7') ? 1 : 0;
-    }, $debug);
-  }
   
-  function teardown()
-  {
-    $this->redis->send_command(0, 'flushdb');
-    $this->redis->send_command(1, 'flushdb');
-  }
-  
-  function test_server_commands()
-  {
-    $this->assert_equal($this->redis->send_command(0, 'ping'), 'PONG');
-    $this->assert_equal($this->redis->send_command(1, 'ping'), 'PONG');
-  }
-  
-  function test_del_command()
-  {
-    $this->redis->mset(array('key1' => 1, 'key2' => 2));
-    $this->assert_equal($this->redis->del('key1', 'key2', 'key3'), 2);
-    $this->assert_false($this->redis->exists('key2'));
-  }
-  
-  function test_msetnx_command()
-  {
-    $this->redis->del('key1', 'key2', 'key3');
-    $this->redis->msetnx(array('key1' => 1, 'key3' => 3));
-    
-    $r = $this->redis;
-    $this->assert_throws('ErrorException', function() use($r) {
-      $r->msetnx(array('key1' => 1, 'key2' => 2));
-    });
-  }
+#  function test_publish_subscribe()
+#  {
+#    if (get_class($this) == 'TestRedis' and $this->is_redis2())
+#    {
+#      $this->assert_equal($this->redis->subscribe('mychat'), array('subscribe', 'mychat', 1));
+#      
+#      $pid = pcntl_fork();
+#      if ($pid == -1) {
+#        echo "\nWARNING: cannot test pub/sub, unable to fork\n";
+#      }
+#      elseif ($pid)
+#      {
+#        $this->assert_equal($this->redis->listen(), array('message', 'mychat', 'hello there'));
+#        $this->assert_equal($this->redis->listen(), array('message', 'mychat', 'how are you?'));
+#        pcntl_wait($status);
+#      }
+#      else
+#      {
+#        $r = new Redis(array('db' => 0xF, 'port' => 6380));
+#        $this->assert_equal($r->publish('mychat', 'hello there'), 1);
+#        $this->assert_equal($r->publish('mychat', 'how are you?'), 1);
+#        exit;
+#      }
+#      
+#      $this->assert_equal($this->redis->unsubscribe(), array('unsubscribe', 'mychat', 0));
+#    }
+#  }
 }
 
 ?>
